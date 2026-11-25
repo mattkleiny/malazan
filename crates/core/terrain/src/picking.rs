@@ -103,7 +103,7 @@ pub fn pick(map: &Map, ray: &Ray, relief: f64) -> Option<Pick> {
   }
 
   let point = ray.at(below);
-  let position = map.wrapped(MapPosition { x: point.x, y: point.z });
+  let position = MapPosition { x: point.x, y: point.z };
   let location = map.location_at(position)?;
 
   Some(Pick { position, location })
@@ -184,11 +184,8 @@ mod tests {
   }
 
   #[test]
-  fn a_ray_past_the_seam_strikes_the_far_side_of_the_map() {
-    let pick = pick(&sea(), &ray([-1.5, 5.0, 1.0], [0.0, -1.0, 0.0]), RELIEF).unwrap();
-
-    assert_eq!(pick.location, EAST);
-    assert!((pick.position.x - 6.5).abs() < 1e-3);
+  fn a_ray_landing_west_of_the_map_strikes_nothing() {
+    assert_eq!(pick(&sea(), &ray([-1.5, 5.0, 1.0], [0.0, -1.0, 0.0]), RELIEF), None);
   }
 
   #[test]

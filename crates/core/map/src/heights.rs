@@ -1,7 +1,7 @@
 //! The heightfield: how high the ground stands across the map.
 
-/// A grid of ground heights stretched over the whole map, wrapping east to
-/// west. It need not share the location raster's resolution.
+/// A grid of ground heights stretched over the whole map. It need not share
+/// the location raster's resolution.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Heightfield {
   width: u32,
@@ -34,7 +34,7 @@ impl Heightfield {
   /// The height (0..1) at a point given as a share of the map's width and
   /// height, blended between the nearest samples.
   pub fn height_at(&self, u: f64, v: f64) -> f64 {
-    let x = u * f64::from(self.width) - 0.5;
+    let x = (u * f64::from(self.width) - 0.5).clamp(0.0, f64::from(self.width - 1));
     let y = (v * f64::from(self.height) - 0.5).clamp(0.0, f64::from(self.height - 1));
 
     let (column, row) = (x.floor(), y.floor());
@@ -48,7 +48,7 @@ impl Heightfield {
   }
 
   fn sample(&self, column: i64, row: i64) -> f64 {
-    let column = column.rem_euclid(i64::from(self.width)) as usize;
+    let column = column.clamp(0, i64::from(self.width) - 1) as usize;
     let row = row.clamp(0, i64::from(self.height) - 1) as usize;
 
     f64::from(self.samples[row * self.width as usize + column]) / f64::from(u16::MAX)
@@ -84,11 +84,11 @@ mod tests {
   }
 
   #[test]
-  fn heights_blend_across_the_seam() {
+  fn heights_hold_steady_out_to_the_edges() {
     let heights = ramp();
 
-    assert!((heights.height_at(0.0, 0.5) - 0.5).abs() < 1e-9);
-    assert!((heights.height_at(1.0, 0.5) - 0.5).abs() < 1e-9);
+    assert_eq!(heights.height_at(0.0, 0.5), 0.0);
+    assert_eq!(heights.height_at(1.0, 0.5), 1.0);
   }
 
   #[test]

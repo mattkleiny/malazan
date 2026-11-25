@@ -60,6 +60,21 @@ impl Terrain {
     Terrain::ALL.into_iter().find(|terrain| terrain.key() == key)
   }
 
+  /// The name players see.
+  pub fn label(self) -> &'static str {
+    match self {
+      Terrain::Plains => "Plains",
+      Terrain::Forest => "Forest",
+      Terrain::Hills => "Hills",
+      Terrain::Mountains => "Mountains",
+      Terrain::Desert => "Desert",
+      Terrain::Marsh => "Marsh",
+      Terrain::Tundra => "Tundra",
+      Terrain::Sea => "Sea",
+      Terrain::Lake => "Lake",
+    }
+  }
+
   pub fn is_water(self) -> bool {
     matches!(self, Terrain::Sea | Terrain::Lake)
   }

@@ -76,8 +76,8 @@ pub struct CellBorders {
   pub south: BorderRank,
 }
 
-/// The borders of each cell of the location raster, row by row. The eastern
-/// side of the last column lies on the seam.
+/// The borders of each cell of the location raster, row by row. The map's
+/// own edges are no border.
 pub fn cell_borders(map: &Map) -> Vec<CellBorders> {
   let raster = &map.raster;
   let mut borders = Vec::with_capacity(raster.cells().len());
@@ -141,14 +141,13 @@ mod tests {
 
     let east: Vec<BorderRank> = cell_borders(&map).iter().map(|borders| borders.east).collect();
 
-    // The last cell's eastern border lies on the seam, against the first.
     assert_eq!(east, [
       BorderRank::Location,
       BorderRank::Province,
       BorderRank::Area,
       BorderRank::Region,
       BorderRank::Continent,
-      BorderRank::Continent,
+      BorderRank::None,
     ]);
   }
 
@@ -160,11 +159,7 @@ mod tests {
 
     let east: Vec<BorderRank> = cell_borders(&map).iter().map(|borders| borders.east).collect();
 
-    assert_eq!(east, [
-      BorderRank::Continent,
-      BorderRank::Location,
-      BorderRank::Continent
-    ]);
+    assert_eq!(east, [BorderRank::Continent, BorderRank::Location, BorderRank::None]);
   }
 
   #[test]

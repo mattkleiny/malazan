@@ -16,8 +16,8 @@ use crate::{
 
 cvar!(pub SEA_LEVEL: f64, "map/sea_level", 0.3, "The height (0..1) of the heightmap at which the sea lies.");
 
-/// A point on the map (map units): `x` runs east and wraps at the seam, `y`
-/// runs south from the northern edge.
+/// A point on the map (map units): `x` runs east from the western edge, `y`
+/// south from the northern edge.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct MapPosition {
   pub x: f64,
@@ -133,7 +133,7 @@ impl Map {
     })
   }
 
-  /// Distance from the seam eastwards and back to it (map units).
+  /// Distance from the western edge to the eastern (map units).
   pub fn width(&self) -> f64 {
     f64::from(self.raster.width())
   }
@@ -175,14 +175,6 @@ impl Map {
       .heights
       .height_at(position.x / self.width(), position.y / self.height())
       - self.sea_level
-  }
-
-  /// The same point, brought back between the seam and its far side.
-  pub fn wrapped(&self, position: MapPosition) -> MapPosition {
-    MapPosition {
-      x: position.x.rem_euclid(self.width()),
-      y: position.y,
-    }
   }
 }
 
@@ -258,16 +250,6 @@ mod tests {
 
     assert_eq!((map.width(), map.height()), (4.0, 1.0));
     assert!(map.adjacency.are_neighbours(LocationId(0), LocationId(1)));
-  }
-
-  #[test]
-  fn a_point_past_the_seam_wraps_back_onto_the_map() {
-    let map = map();
-
-    assert_eq!(map.wrapped(MapPosition { x: -1.0, y: 0.5 }), MapPosition {
-      x: 3.0,
-      y: 0.5
-    });
   }
 
   #[test]

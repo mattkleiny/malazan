@@ -1,5 +1,6 @@
 ## A row of icon buttons along the bottom of the screen, one per map mode: hovering one previews its mode, pressing one or its number key chooses it.
 
+@icon("res://editor/icons/map_mode_bar.svg")
 class_name MapModeBar extends PanelContainer
 
 signal mode_chosen(mode: StringName) ## A button or its number key was pressed.
@@ -50,13 +51,14 @@ func show_modes(labels: Dictionary[StringName, String]) -> void:
 		_by_mode[mode] = button
 
 
-## Marks the chosen mode's button, without choosing it again.
+## Marks the chosen mode's button and unmarks the rest, without choosing it again.
 func show_chosen(mode: StringName) -> void:
-	var button: Button = _by_mode.get(mode)
-	if button == null:
+	if not _by_mode.has(mode):
 		return
 
-	button.set_pressed_no_signal(true)
+	# setting a button without its signal leaves the rest of its group pressed, so each is set by hand
+	for other: StringName in _by_mode:
+		_by_mode[other].set_pressed_no_signal(other == mode)
 
 
 func _make_button(mode: StringName, tooltip: String) -> Button:

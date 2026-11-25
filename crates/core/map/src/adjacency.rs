@@ -12,7 +12,7 @@ pub struct Adjacency {
 }
 
 impl Adjacency {
-  /// Finds the locations whose cells touch edge to edge, across the seam too.
+  /// Finds the locations whose cells touch edge to edge.
   pub fn from_raster(raster: &LocationRaster, location_count: usize) -> Self {
     let mut pairs = BTreeSet::new();
 
@@ -95,11 +95,10 @@ mod tests {
   }
 
   #[test]
-  fn locations_on_either_side_of_the_seam_are_neighbours() {
+  fn locations_at_opposite_edges_are_not_neighbours() {
     let adjacency = Adjacency::from_raster(&strip(4), 4);
 
-    assert!(adjacency.are_neighbours(LocationId(0), LocationId(3)));
-    assert!(adjacency.are_neighbours(LocationId(3), LocationId(0)));
+    assert!(!adjacency.are_neighbours(LocationId(0), LocationId(3)));
   }
 
   #[test]

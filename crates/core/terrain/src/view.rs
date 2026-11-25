@@ -1,5 +1,6 @@
 //! The terrain view: the node that draws the map and picks locations on it.
 
+mod selections;
 mod textures;
 
 use game_map::{LocationId, Map, MapMode, MapSources, SEA_LEVEL, map_mode, map_modes};
@@ -11,13 +12,15 @@ use godot::{
   },
   prelude::*,
 };
+pub use selections::MapSelection;
 use surreal::{cvar, maths::Vec3};
 
 use crate::{
-  chunks::{ChunkGrid, LEVEL_QUADS, chunk_mesh, level_of_detail, nearest_copy},
+  chunks::{ChunkGrid, LEVEL_QUADS, chunk_mesh, level_of_detail},
   picking::{Ray, pick},
+  selections::Selections,
   transitions::FillTransition,
-  view::textures::{MapTextures, colors_image},
+  view::textures::{MapTextures, colors_image, highlights_image},
 };
 
 cvar!(pub MAP_MODE_FADE: f64, "terrain/map_mode_fade", 0.3, "How long the map takes to fade between map modes (s).");
@@ -33,8 +36,8 @@ struct Chunk {
   level: usize, // Level of detail it is drawn at.
 }
 
-/// Draws the map's surface in chunks around the camera, wrapping east to
-/// west, and finds the location under a point of the screen.
+/// Draws the map's surface in chunks, finer near the camera, and finds the
+/// location under a point of the screen.
 #[derive(GodotClass)]
 #[class(init, base = Node3D)]
 pub struct TerrainView {
@@ -65,6 +68,8 @@ pub struct TerrainView {
   preview_mode: Option<&'static dyn MapMode>, // Shown over the chosen mode while set.
   fills: Option<FillTransition>,
   colors: Option<Gd<ImageTexture>>,
+  selections: Selections,
+  highlights: Option<Gd<ImageTexture>>,
   grid: Option<ChunkGrid>,
   meshes: Vec<Gd<ArrayMesh>>, // One per level of detail.
   chunks: Vec<Chunk>,
@@ -104,39 +109,6 @@ impl TerrainView {
     };
 
     pick(map, &ray, f64::from(self.relief)).map_or(-1, |pick| i64::from(pick.location.0))
-  }
-
-  /// The names a location is known by, from the location up to its continent.
-  #[func]
-  fn get_location_info(&self, location: i64) -> VarDictionary {
-    let mut info = VarDictionary::new();
-    let Some(map) = &self.map else {
-      return info;
-    };
-    let Ok(id) = u16::try_from(location).map(LocationId) else {
-      return info;
-    };
-    let Some(found) = map.location(id) else {
-      return info;
-    };
-
-    info.set("name", found.name.as_str());
-    info.set("terrain", found.terrain.key());
-
-    if let Some(province) = map.province_of(id) {
-      info.set("province", province.name.as_str());
-    }
-    if let Some(area) = map.area_of(id) {
-      info.set("area", area.name.as_str());
-    }
-    if let Some(region) = map.region_of(id) {
-      info.set("region", region.name.as_str());
-    }
-    if let Some(continent) = map.continent_of(id) {
-      info.set("continent", continent.name.as_str());
-    }
-
-    info
   }
 
   /// The keys of every map mode, in the order they are offered.
@@ -196,19 +168,57 @@ impl TerrainView {
     }
   }
 
-  /// Highlights the location the cursor is over; -1 for none.
+  /// Rests the cursor on a location, or on nothing for -1; lights what the map
+  /// mode selects there.
   #[func]
-  fn set_hovered_location(&mut self, location: i64) {
-    self.set_parameter("hovered_location", &(location as i32).to_variant());
+  fn hover_location(&mut self, location: i64) {
+    let location = to_location(location);
+    let (Some(map), Some(mode)) = (&self.map, self.shown_mode()) else {
+      return;
+    };
+
+    if self.selections.hover(map, mode, location) {
+      self.upload_highlights();
+    }
   }
 
-  /// Highlights the chosen location; -1 for none.
+  /// Chooses what a location selects in the map mode, or clears the choice for
+  /// -1.
   #[func]
-  fn set_selected_location(&mut self, location: i64) {
-    self.set_parameter("selected_location", &(location as i32).to_variant());
+  fn select_location(&mut self, location: i64) {
+    let location = to_location(location);
+    let (Some(map), Some(mode)) = (&self.map, self.shown_mode()) else {
+      return;
+    };
+
+    if self.selections.select(map, mode, location) {
+      self.upload_highlights();
+    }
   }
 
-  /// Distance from the seam eastwards and back to it (map units).
+  /// What the cursor rests on, or null.
+  #[func]
+  fn get_hovered(&self) -> Option<Gd<MapSelection>> {
+    self
+      .selections
+      .hovered
+      .selection
+      .as_ref()
+      .map(MapSelection::from_selection)
+  }
+
+  /// What the player chose, or null.
+  #[func]
+  fn get_selected(&self) -> Option<Gd<MapSelection>> {
+    self
+      .selections
+      .selected
+      .selection
+      .as_ref()
+      .map(MapSelection::from_selection)
+  }
+
+  /// Distance from the western edge to the eastern (map units).
   #[func]
   fn get_map_width(&self) -> f64 {
     self.map.as_ref().map_or(0.0, Map::width)
@@ -259,8 +269,6 @@ impl TerrainView {
     self.set_parameter("sea_level", &(map.sea_level as f32).to_variant());
     self.set_parameter("relief", &self.relief.to_variant());
     self.set_parameter("skirt_depth", &SKIRT_DEPTH.to_variant());
-    self.set_parameter("hovered_location", &(-1).to_variant());
-    self.set_parameter("selected_location", &(-1).to_variant());
 
     self.meshes = LEVEL_QUADS.iter().map(|&quads| self.level_mesh(&grid, quads)).collect();
 
@@ -268,7 +276,10 @@ impl TerrainView {
       for column in 0..grid.columns {
         let mut node = MeshInstance3D::new_alloc();
 
+        let [west, north] = grid.origin(column, row);
+
         node.set_name(&format!("Chunk{column}x{row}"));
+        node.set_position(Vector3::new(west as f32, 0.0, north as f32));
         node.set_mesh(&self.meshes[LEVEL_QUADS.len() - 1]);
         node.set_cast_shadows_setting(ShadowCastingSetting::OFF);
         if let Some(material) = &self.material {
@@ -328,7 +339,6 @@ impl TerrainView {
 
     let to_local = self.base().get_global_transform().affine_inverse();
     let eye = to_local * camera.get_global_position();
-    let map_width = f64::from(grid.columns) * grid.chunk_width;
     let reach = f64::from(self.detail_reach);
     let (half_width, half_depth) = (grid.chunk_width / 2.0, grid.chunk_depth / 2.0);
 
@@ -336,12 +346,8 @@ impl TerrainView {
 
     for chunk in &mut self.chunks {
       let [west, north] = grid.origin(chunk.column, chunk.row);
-      let west = nearest_copy(west + half_width, f64::from(eye.x), map_width) - half_width;
-
       let centre = Vector3::new((west + half_width) as f32, 0.0, (north + half_depth) as f32);
       let level = level_of_detail(f64::from(eye.distance_to(centre)), reach);
-
-      chunk.node.set_position(Vector3::new(west as f32, 0.0, north as f32));
 
       if level != chunk.level {
         chunk.node.set_mesh(&self.meshes[level]);
@@ -350,16 +356,24 @@ impl TerrainView {
     }
   }
 
-  /// Starts fading to the previewed mode, or the chosen one when none is.
+  /// The previewed map mode, or the chosen one when none is.
+  fn shown_mode(&self) -> Option<&'static dyn MapMode> {
+    self.preview_mode.or(self.chosen_mode)
+  }
+
+  /// Starts fading to the shown mode's fills, and selects again as it sees
+  /// things.
   fn show_mode(&mut self) {
-    let Some(map) = &self.map else {
-      return;
-    };
-    let Some(mode) = self.preview_mode.or(self.chosen_mode) else {
+    let (Some(map), Some(mode)) = (&self.map, self.shown_mode()) else {
       return;
     };
 
     let fills = mode.fills(map);
+    let selections_changed = self.selections.refresh(map, mode);
+
+    if selections_changed || self.highlights.is_none() {
+      self.upload_highlights();
+    }
 
     match &mut self.fills {
       Some(transition) => transition.retarget(fills),
@@ -406,6 +420,37 @@ impl TerrainView {
     self.colors = Some(colors);
   }
 
+  fn upload_highlights(&mut self) {
+    let Some(map) = &self.map else {
+      return;
+    };
+    let Some(image) = highlights_image(&self.selections.highlights(map.locations.len())) else {
+      godot_error!("TerrainView: cannot make the selection highlights");
+      return;
+    };
+
+    if let Some(highlights) = &mut self.highlights {
+      highlights.update(&image);
+      self.show_whether_selected();
+      return;
+    }
+
+    let Some(highlights) = ImageTexture::create_from_image(&image) else {
+      godot_error!("TerrainView: cannot make the selection highlights");
+      return;
+    };
+
+    self.set_parameter("highlights_tex", &highlights.to_variant());
+    self.highlights = Some(highlights);
+    self.show_whether_selected();
+  }
+
+  fn show_whether_selected(&mut self) {
+    let has_selection = self.selections.selected.selection.is_some();
+
+    self.set_parameter("has_selection", &has_selection.to_variant());
+  }
+
   fn set_parameter(&mut self, name: &str, value: &Variant) {
     if let Some(material) = &mut self.material {
       material.set_shader_parameter(name, value);
@@ -421,6 +466,11 @@ fn find_mode(key: &StringName) -> Option<&'static dyn MapMode> {
   }
 
   mode
+}
+
+/// A location id from Godot, where -1 or anything out of range means none.
+fn to_location(location: i64) -> Option<LocationId> {
+  u16::try_from(location).ok().map(LocationId)
 }
 
 fn to_vec3(vector: Vector3) -> Vec3 {

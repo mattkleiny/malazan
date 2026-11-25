@@ -30,7 +30,7 @@ rng = np.random.default_rng(SEED)
 
 
 def periodic_noise(width, height, cells_x, octaves=6, persistence=0.5):
-  """Fractal value noise in 0..1 that wraps east to west."""
+  """Fractal value noise in 0..1."""
   total = np.zeros((height, width))
   amplitude, norm = 1.0, 0.0
   xs = np.arange(width) / width
@@ -39,7 +39,7 @@ def periodic_noise(width, height, cells_x, octaves=6, persistence=0.5):
   for octave in range(octaves):
     gx = cells_x * 2**octave
     gy = max(2, gx * height // width)
-    grid = rng.random((gy + 1, gx))
+    grid = rng.random((gy + 1, gx + 1))
 
     fx = xs * gx
     fy = ys * gy
@@ -49,8 +49,8 @@ def periodic_noise(width, height, cells_x, octaves=6, persistence=0.5):
     ty = fy - y0
     tx = tx * tx * (3 - 2 * tx)
     ty = ty * ty * (3 - 2 * ty)
-    x1 = (x0 + 1) % gx
-    x0 = x0 % gx
+    x0 = np.clip(x0, 0, gx - 1)
+    x1 = x0 + 1
 
     top = grid[y0][:, x0] * (1 - tx) + grid[y0][:, x1] * tx
     bottom = grid[y0 + 1][:, x0] * (1 - tx) + grid[y0 + 1][:, x1] * tx
@@ -70,8 +70,7 @@ def upsample(heights, factor):
   x0 = np.floor(xs).astype(int)
   y0 = np.floor(ys).astype(int)
   tx, ty = xs - x0, ys - y0
-  x1, y1 = (x0 + 1) % columns, np.minimum(y0 + 1, rows - 1)
-  x0 %= columns
+  x1, y1 = np.minimum(x0 + 1, columns - 1), np.minimum(y0 + 1, rows - 1)
 
   top = heights[y0][:, x0] * (1 - tx) + heights[y0][:, x1] * tx
   bottom = heights[y1][:, x0] * (1 - tx) + heights[y1][:, x1] * tx
@@ -84,8 +83,10 @@ def heightmap():
   detail = periodic_noise(width, height, 8, octaves=6)
   ridges = 1 - np.abs(periodic_noise(width, height, 6, octaves=5) * 2 - 1)
 
+  # Land falls away towards every edge, so the map is ringed by sea.
   latitude = np.abs(np.linspace(-1, 1, height))[:, None]
-  land = shape * 0.65 + detail * 0.35 - latitude**4 * 0.35
+  longitude = np.abs(np.linspace(-1, 1, width))[None, :]
+  land = shape * 0.65 + detail * 0.35 - latitude**4 * 0.35 - longitude**6 * 0.45
   land = (land - land.min()) / (land.max() - land.min())
 
   # A third of the map is land: lift it above the sea and raise ridges into mountain ranges.
@@ -100,7 +101,7 @@ def heightmap():
 
 
 def seeds(spacing):
-  """One seed jittered within each cell of a grid, which wraps east to west."""
+  """One seed jittered within each cell of a grid."""
   columns, rows = WIDTH // spacing, HEIGHT // spacing
   jitter = rng.random((rows, columns, 2)) * 0.8 + 0.1
   cx, cy = np.meshgrid(np.arange(columns), np.arange(rows))
@@ -118,9 +119,8 @@ def nearest_seed(px, py, sx, sy, spacing):
   for oy in (-1, 0, 1):
     for ox in (-1, 0, 1):
       ny = np.clip(cy + oy, 0, rows - 1)
-      nx = (cx + ox) % columns
+      nx = np.clip(cx + ox, 0, columns - 1)
       dx = np.abs(sx[ny, nx] - px)
-      dx = np.minimum(dx, WIDTH - dx)
       dy = sy[ny, nx] - py
       distance = dx * dx + dy * dy
       closer = distance < best
@@ -163,9 +163,9 @@ def main():
   water = used >= land_x.size
   count = len(used)
 
-  # Neighbours, across the seam too.
+  # Neighbours, east and south.
   neighbours = defaultdict(set)
-  for a, b in ((cells, np.roll(cells, -1, axis=1)), (cells[:-1], cells[1:])):
+  for a, b in ((cells[:, :-1], cells[:, 1:]), (cells[:-1], cells[1:])):
     edge = a != b
     for x, y in set(zip(a[edge].tolist(), b[edge].tolist())):
       neighbours[x].add(y)
@@ -221,7 +221,7 @@ def main():
 
     def distance(mass):
       dx = abs(centres[mass][0] - all_x[index])
-      return min(dx, WIDTH - dx) ** 2 + (centres[mass][1] - all_y[index]) ** 2
+      return dx**2 + (centres[mass][1] - all_y[index]) ** 2
 
     return min(large, key=distance)
 
@@ -272,7 +272,7 @@ def main():
       # A region takes the continent most of it lies on, judged from its seed.
       key = (kind, region)
       if key not in names["region_continent"]:
-        nearest = int(np.argmin(np.minimum(np.abs(all_x - rx), WIDTH - np.abs(all_x - rx)) ** 2 + (all_y - ry) ** 2 + water * 1e12))
+        nearest = int(np.argmin((all_x - rx) ** 2 + (all_y - ry) ** 2 + water * 1e12))
         names["region_continent"][key] = named("continent", continent_of(nearest))
       continent = names["region_continent"][key]
       suffix = ""

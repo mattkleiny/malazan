@@ -2,7 +2,11 @@
 
 use surreal::utilities::inventory;
 
-use crate::map::Map;
+use crate::{
+  locations::LocationId,
+  map::Map,
+  selections::{Selection, location_selection},
+};
 
 pub mod standard;
 
@@ -38,6 +42,12 @@ pub trait MapMode: Sync + 'static {
 
   /// The fill of every location, in the order of the map's table of them.
   fn fills(&self, map: &Map) -> Vec<Fill>;
+
+  /// What picking a location chooses in this mode: the location itself
+  /// unless the mode offers something else.
+  fn select(&self, map: &Map, location: LocationId) -> Option<Selection> {
+    location_selection(map, location)
+  }
 }
 
 /// A map mode as [map_mode!] submits it.

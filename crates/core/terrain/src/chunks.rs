@@ -100,11 +100,6 @@ pub fn chunk_mesh(width: f64, depth: f64, quads: u32) -> ChunkMesh {
   ChunkMesh { vertices, indices }
 }
 
-/// The copy of `x` nearest to `focus` on a map that repeats every `width`.
-pub fn nearest_copy(x: f64, focus: f64, width: f64) -> f64 {
-  x + ((focus - x) / width).round() * width
-}
-
 /// The level of detail for a chunk at `distance` from the camera, where the
 /// finest level reaches out to `reach` and each coarser one twice as far.
 pub fn level_of_detail(distance: f64, reach: f64) -> usize {
@@ -180,14 +175,6 @@ mod tests {
     assert_eq!(hem, 5 * 4);
     assert_eq!(mesh.vertices.len(), 5 * 5 + hem);
     assert!(mesh.indices.iter().all(|&index| (index as usize) < mesh.vertices.len()));
-  }
-
-  #[test]
-  fn a_chunk_is_drawn_at_its_copy_nearest_the_camera() {
-    assert_eq!(nearest_copy(10.0, 20.0, 100.0), 10.0);
-    assert_eq!(nearest_copy(10.0, 90.0, 100.0), 110.0);
-    assert_eq!(nearest_copy(90.0, -5.0, 100.0), -10.0);
-    assert_eq!(nearest_copy(10.0, 512.0, 100.0), 510.0);
   }
 
   #[test]

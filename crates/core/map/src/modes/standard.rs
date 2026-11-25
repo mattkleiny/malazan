@@ -1,9 +1,10 @@
 //! The map modes that show the map itself: its terrain and its divisions.
 
 use crate::{
-  locations::{Location, Terrain},
+  locations::{Location, LocationId, Terrain},
   map::Map,
   modes::{Fill, MapMode},
+  selections::{Selection, Tier, division_selection},
 };
 
 /// Colours each location by the kind of ground it is.
@@ -59,6 +60,10 @@ impl MapMode for ProvinceMode {
   fn fills(&self, map: &Map) -> Vec<Fill> {
     land_fills(map, |location| Some(division_color(1, location.province.0)))
   }
+
+  fn select(&self, map: &Map, location: LocationId) -> Option<Selection> {
+    division_selection(map, location, Tier::Province)
+  }
 }
 
 /// Colours each location by its area.
@@ -79,6 +84,10 @@ impl MapMode for AreaMode {
 
       Some(division_color(2, province.area.0))
     })
+  }
+
+  fn select(&self, map: &Map, location: LocationId) -> Option<Selection> {
+    division_selection(map, location, Tier::Area)
   }
 }
 
@@ -102,6 +111,10 @@ impl MapMode for RegionMode {
       Some(division_color(3, area.region.0))
     })
   }
+
+  fn select(&self, map: &Map, location: LocationId) -> Option<Selection> {
+    division_selection(map, location, Tier::Region)
+  }
 }
 
 /// Colours each location by its continent.
@@ -124,6 +137,10 @@ impl MapMode for ContinentMode {
 
       Some(division_color(4, region.continent.0))
     })
+  }
+
+  fn select(&self, map: &Map, location: LocationId) -> Option<Selection> {
+    division_selection(map, location, Tier::Continent)
   }
 }
 
@@ -245,6 +262,17 @@ mod tests {
   #[test]
   fn location_mode_colours_the_sea_too() {
     assert_eq!(LocationMode.fills(&map())[SEA.index()], Fill::solid([4, 0, 0]));
+  }
+
+  #[test]
+  fn each_division_mode_selects_its_own_tier() {
+    let map = map();
+
+    assert_eq!(TerrainMode.select(&map, LocationId(0)).unwrap().kind, "location");
+    assert_eq!(ProvinceMode.select(&map, LocationId(0)).unwrap().kind, "province");
+    assert_eq!(AreaMode.select(&map, LocationId(0)).unwrap().kind, "area");
+    assert_eq!(RegionMode.select(&map, LocationId(0)).unwrap().kind, "region");
+    assert_eq!(ContinentMode.select(&map, LocationId(0)).unwrap().kind, "continent");
   }
 
   #[test]

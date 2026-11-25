@@ -11,7 +11,7 @@ use crate::{
 const MAX_REPORTED_COLORS: usize = 16;
 
 /// A grid over the map naming the location under each cell. One cell is one
-/// map unit, and the grid wraps east to west.
+/// map unit.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LocationRaster {
   width: u32,
@@ -70,13 +70,11 @@ impl LocationRaster {
     &self.cells
   }
 
-  /// The location of a cell; columns wrap east to west.
+  /// The location of a cell, or none off the edge of the map.
   pub fn cell(&self, column: i64, row: i64) -> Option<LocationId> {
-    if row < 0 || row >= i64::from(self.height) {
+    if row < 0 || row >= i64::from(self.height) || column < 0 || column >= i64::from(self.width) {
       return None;
     }
-
-    let column = column.rem_euclid(i64::from(self.width));
 
     self
       .cells
@@ -127,11 +125,11 @@ mod tests {
   }
 
   #[test]
-  fn a_point_past_the_seam_wraps_to_the_other_side() {
+  fn a_point_east_or_west_of_the_map_is_nowhere() {
     let raster = raster();
 
-    assert_eq!(raster.location_at(MapPosition { x: -0.5, y: 0.5 }), Some(LocationId(1)));
-    assert_eq!(raster.location_at(MapPosition { x: 3.5, y: 0.5 }), Some(LocationId(0)));
+    assert_eq!(raster.location_at(MapPosition { x: -0.5, y: 0.5 }), None);
+    assert_eq!(raster.location_at(MapPosition { x: 3.5, y: 0.5 }), None);
   }
 
   #[test]

@@ -9,6 +9,7 @@ mod locations;
 mod map;
 mod modes;
 mod raster;
+mod selections;
 
 pub use adjacency::Adjacency;
 pub use divisions::{Area, AreaId, Continent, ContinentId, Province, ProvinceId, Region, RegionId};
@@ -20,3 +21,4 @@ pub use modes::{
   standard::{division_color, land_fills},
 };
 pub use raster::LocationRaster;
+pub use selections::{Selection, Tier, division_selection, location_selection};

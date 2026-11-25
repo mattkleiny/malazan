@@ -1,13 +1,14 @@
-## Looks down on the map: pans over it, zooms in and out, and wraps across the seam.
+## Looks down on the map: pans over it, zooms in and out, and stays over it.
 
+@icon("res://editor/icons/map_camera.svg")
 class_name MapCamera extends Camera3D
 
 const MIN_PITCH: float = 35.0 ## Pitch fully zoomed in (degrees down from the horizon).
 const MAX_PITCH: float = 75.0 ## Pitch fully zoomed out (degrees down from the horizon).
 
-@export var terrain: TerrainView ## The map the camera wraps around and stays over.
+@export var terrain: TerrainView ## The map the camera stays over.
 @export var min_distance: float = 20.0 ## Closest the camera comes to its focus (map units).
-@export var max_distance: float = 650.0 ## Furthest the camera pulls back (map units); past this the ends of the map show.
+@export var max_distance: float = 900.0 ## Furthest the camera pulls back (map units).
 @export var pan_speed: float = 1.2 ## Share of the view's distance panned per second.
 @export var zoom_step: float = 1.15 ## Factor one wheel notch zooms by.
 @export var zoom_smoothing: float = 10.0 ## How quickly the zoom settles (1/s).
@@ -28,7 +29,7 @@ func _process(delta: float) -> void:
 	var input := Input.get_vector(&"ui_left", &"ui_right", &"ui_up", &"ui_down")
 	focus += Vector3(input.x, 0.0, input.y) * distance * pan_speed * delta
 	distance = lerpf(distance, _target_distance, 1.0 - exp(-zoom_smoothing * delta))
-	_wrap()
+	_keep_over_map()
 	_place()
 
 
@@ -44,16 +45,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		focus -= Vector3(motion.relative.x, 0.0, motion.relative.y) * units_per_pixel
 
 
-## Keeps the focus on the map: across the seam it comes back on the far side.
-func _wrap() -> void:
+## Keeps the focus within the map's edges.
+func _keep_over_map() -> void:
 	if not is_instance_valid(terrain):
 		return
 
-	var width := terrain.get_map_width()
-	if width <= 0.0:
-		return
-
-	focus.x = fposmod(focus.x, width)
+	focus.x = clampf(focus.x, 0.0, terrain.get_map_width())
 	focus.z = clampf(focus.z, 0.0, terrain.get_map_height())
 
 

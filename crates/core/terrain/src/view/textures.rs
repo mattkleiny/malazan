@@ -54,6 +54,22 @@ pub fn colors_image(fills: &[Fill]) -> Option<Gd<Image>> {
   Image::create_from_data(LOOKUP_WIDTH as i32, rows as i32, false, Format::RGBA8, &data)
 }
 
+/// Which locations are lit as hovered (red) and selected (green), laid out
+/// like the colour lookup.
+pub fn highlights_image(lit: &[[bool; 2]]) -> Option<Gd<Image>> {
+  let rows = lit.len().div_ceil(LOOKUP_WIDTH).max(1);
+  let texels = lit
+    .iter()
+    .copied()
+    .chain(std::iter::repeat([false; 2]))
+    .take(rows * LOOKUP_WIDTH);
+  let data: PackedByteArray = texels
+    .flat_map(|[hovered, selected]| [u8::from(hovered) * u8::MAX, u8::from(selected) * u8::MAX])
+    .collect();
+
+  Image::create_from_data(LOOKUP_WIDTH as i32, rows as i32, false, Format::RG8, &data)
+}
+
 fn texture(width: u32, height: u32, format: Format, bytes: impl Iterator<Item = u8>) -> Option<Gd<ImageTexture>> {
   let data: PackedByteArray = bytes.collect();
   let image = Image::create_from_data(width as i32, height as i32, false, format, &data)?;

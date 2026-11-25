@@ -7,9 +7,9 @@ const float SNOW_LINE = 0.75;
 const int LOOKUP_WIDTH = 256;
 
 group_uniforms map;
-uniform sampler2D heights_tex : filter_linear, repeat_enable;
-uniform sampler2D locations_tex : filter_nearest, repeat_enable;
-uniform sampler2D borders_tex : filter_nearest, repeat_enable;
+uniform sampler2D heights_tex : filter_linear, repeat_disable;
+uniform sampler2D locations_tex : filter_nearest;
+uniform sampler2D borders_tex : filter_nearest;
 uniform sampler2D colors_tex : source_color, filter_nearest;
 /** Size of the map (map units). */
 uniform vec2 map_size = vec2(2048.0, 1024.0);
@@ -22,10 +22,14 @@ uniform float skirt_depth : hint_range(0.0, 50.0) = 4.0;
 uniform mat4 terrain_from_world = mat4(1.0);
 
 group_uniforms highlight;
-uniform int hovered_location = -1;
-uniform int selected_location = -1;
+/** Per location: red while hovered, green while selected. */
+uniform sampler2D highlights_tex : filter_nearest;
+/** Whether anything is selected, so the rest of the map dims. */
+uniform bool has_selection = false;
+/** How much the map outside the selection darkens (0..1). */
+uniform float unselected_dimming : hint_range(0.0, 1.0) = 0.35;
 uniform vec4 hover_color : source_color = vec4(1.0, 1.0, 1.0, 0.25);
-uniform vec4 selected_color : source_color = vec4(1.0, 0.85, 0.3, 0.45);
+uniform vec4 selected_color : source_color = vec4(1.0, 0.85, 0.3, 0.2);
 
 group_uniforms look;
 /** How strongly the map mode's colours cover the ground (0..1). */
@@ -42,8 +46,8 @@ uniform float border_width : hint_range(0.0, 2.0) = 0.35;
 varying vec2 map_position;
 
 vec2 height_uv(vec2 position) {
-	float half_texel = 0.5 / float(textureSize(heights_tex, 0).y);
-	return vec2(fract(position.x / map_size.x), clamp(position.y / map_size.y, half_texel, 1.0 - half_texel));
+	vec2 half_texel = 0.5 / vec2(textureSize(heights_tex, 0));
+	return clamp(position / map_size, half_texel, 1.0 - half_texel);
 }
 
 float height_at(vec2 position) {
@@ -57,7 +61,7 @@ float surface_at(vec2 position) {
 
 ivec2 cell_at(vec2 cell) {
 	ivec2 size = textureSize(locations_tex, 0);
-	return ivec2(int(mod(cell.x, float(size.x))), clamp(int(cell.y), 0, size.y - 1));
+	return clamp(ivec2(cell), ivec2(0), size - 1);
 }
 
 int location_in(ivec2 cell) {
@@ -65,14 +69,17 @@ int location_in(ivec2 cell) {
 	return int(id.r) + int(id.g) * 256;
 }
 
-vec4 fill_of(int location) {
-	return texelFetch(colors_tex, ivec2(location % LOOKUP_WIDTH, location / LOOKUP_WIDTH), 0);
+ivec2 lookup_texel(int location) {
+	return ivec2(location % LOOKUP_WIDTH, location / LOOKUP_WIDTH);
 }
 
-vec4 blended_fill(vec2 corner, vec2 blend) {
-	vec4 north = mix(fill_of(location_in(cell_at(corner))), fill_of(location_in(cell_at(corner + vec2(1.0, 0.0)))), blend.x);
-	vec4 south = mix(fill_of(location_in(cell_at(corner + vec2(0.0, 1.0)))), fill_of(location_in(cell_at(corner + vec2(1.0, 1.0)))), blend.x);
-	return mix(north, south, blend.y);
+// A per-location lookup blended between the four nearest cells, so fills and highlights meet softly.
+vec4 blended_lookup(sampler2D lookup, vec2 corner, vec2 blend) {
+	vec4 north_west = texelFetch(lookup, lookup_texel(location_in(cell_at(corner))), 0);
+	vec4 north_east = texelFetch(lookup, lookup_texel(location_in(cell_at(corner + vec2(1.0, 0.0)))), 0);
+	vec4 south_west = texelFetch(lookup, lookup_texel(location_in(cell_at(corner + vec2(0.0, 1.0)))), 0);
+	vec4 south_east = texelFetch(lookup, lookup_texel(location_in(cell_at(corner + vec2(1.0, 1.0)))), 0);
+	return mix(mix(north_west, north_east, blend.x), mix(south_west, south_east, blend.x), blend.y);
 }
 
 // How strongly a border line covers this point (0..1).
@@ -117,7 +124,6 @@ void fragment() {
 	vec2 corner = floor(cell);
 	vec2 blend = cell - corner;
 
-	int location = location_in(cell_at(map_position));
 	float height = height_at(map_position);
 	bool is_water = height < sea_level;
 
@@ -125,15 +131,17 @@ void fragment() {
 		? mix(shallow_color.rgb, deep_color.rgb, smoothstep(0.0, 0.2, sea_level - height))
 		: ground_color(height);
 
-	vec4 fill = blended_fill(corner, blend);
+	vec4 fill = blended_lookup(colors_tex, corner, blend);
 	color = mix(color, fill.rgb, fill.a * fill_strength);
 
-	if (location == hovered_location) {
-		color = mix(color, hover_color.rgb, hover_color.a);
+	vec2 lit = blended_lookup(highlights_tex, corner, blend).rg;
+	color = mix(color, hover_color.rgb, hover_color.a * lit.r);
+	color = mix(color, selected_color.rgb, selected_color.a * lit.g);
+	if (has_selection) {
+		color *= mix(1.0 - unselected_dimming, 1.0, lit.g);
 	}
-	if (location == selected_location) {
-		color = mix(color, selected_color.rgb, selected_color.a);
-	}
+	// The blended highlight passes through one half at the selection's edge, which rules its outline.
+	color = mix(color, selected_color.rgb, 1.0 - abs(lit.g * 2.0 - 1.0));
 
 	color = mix(color, border_color.rgb, border_mask(corner, blend));
 

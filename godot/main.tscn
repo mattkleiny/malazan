@@ -49,11 +49,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Map mode: Terrain"
 
-[node name="LocationLabel" type="Label" parent="Hud/Panel/Lines"]
+[node name="SelectionLabel" type="Label" parent="Hud/Panel/Lines"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Location (terrain)
-Province · Area · Region · Continent"
+text = "Selection
+What it is · Where it lies"
 
 [node name="MapModeBar" parent="Hud" instance=ExtResource("4")]
 unique_name_in_owner = true
