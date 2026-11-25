@@ -1,6 +1,6 @@
 ## The map screen: picks what lies under the cursor in the shown map mode and passes map mode choices to the terrain.
 
-@icon("res://editor/icons/map_view.svg")
+@icon("res://editor/icons/MapView.svg")
 class_name MapView extends Node3D
 
 var _hovered: int = -1

@@ -1,6 +1,6 @@
 ## Looks down on the map: pans over it, zooms in and out, and stays over it.
 
-@icon("res://editor/icons/map_camera.svg")
+@icon("res://editor/icons/MapCamera.svg")
 class_name MapCamera extends Camera3D
 
 const MIN_PITCH: float = 35.0 ## Pitch fully zoomed in (degrees down from the horizon).

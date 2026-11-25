@@ -1,6 +1,6 @@
 ## A row of icon buttons along the bottom of the screen, one per map mode: hovering one previews its mode, pressing one or its number key chooses it.
 
-@icon("res://editor/icons/map_mode_bar.svg")
+@icon("res://editor/icons/MapModeBar.svg")
 class_name MapModeBar extends PanelContainer
 
 signal mode_chosen(mode: StringName) ## A button or its number key was pressed.

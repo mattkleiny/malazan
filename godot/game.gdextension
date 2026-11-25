@@ -23,10 +23,10 @@ compatibility_minimum = 4.4
 "windows.editor" = "res://../target/debug/game.dll"
 
 [icons]
+MapCamera = "res://editor/icons/MapCamera.svg"
+MapModeBar = "res://editor/icons/MapModeBar.svg"
+MapView = "res://editor/icons/MapView.svg"
 TerrainView = "res://editor/icons/TerrainView.svg"
-map_camera = "res://editor/icons/map_camera.svg"
-map_mode_bar = "res://editor/icons/map_mode_bar.svg"
-map_view = "res://editor/icons/map_view.svg"
 
 [dependencies]
 "linux.debug" = {
