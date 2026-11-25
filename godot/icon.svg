@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05060a"/>
+      <stop offset="0.55" stop-color="#14101a"/>
+      <stop offset="0.8" stop-color="#3a0f12"/>
+      <stop offset="1" stop-color="#5c1210"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.45" stop-color="#b8c4c8" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#b8c4c8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="moon" cx="0.38" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#eef0e6"/>
+      <stop offset="0.7" stop-color="#b9bfb8"/>
+      <stop offset="1" stop-color="#7c8484"/>
+    </radialGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a7adb0"/>
+      <stop offset="0.5" stop-color="#5d6366"/>
+      <stop offset="0.5" stop-color="#34383b"/>
+      <stop offset="1" stop-color="#1d2022"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d0909"/>
+      <stop offset="1" stop-color="#030303"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.45" r="0.7">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.65"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <clipPath id="frame">
+      <rect x="8" y="8" width="240" height="240" rx="36"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <!-- Night sky bleeding red at the horizon -->
+    <rect width="256" height="256" fill="url(#sky)"/>
+
+    <!-- Stars -->
+    <g fill="#c9ced6">
+      <circle cx="40" cy="38" r="1"/>
+      <circle cx="66" cy="62" r="0.8" opacity="0.7"/>
+      <circle cx="30" cy="96" r="0.8" opacity="0.6"/>
+      <circle cx="214" cy="40" r="1" opacity="0.8"/>
+      <circle cx="226" cy="98" r="0.8" opacity="0.6"/>
+      <circle cx="96" cy="28" r="0.8" opacity="0.5"/>
+    </g>
+
+    <!-- Pale moon behind the blade -->
+    <circle cx="140" cy="92" r="72" fill="url(#halo)"/>
+    <circle cx="140" cy="92" r="50" fill="url(#moon)"/>
+    <g fill="#8d9494" opacity="0.55">
+      <ellipse cx="116" cy="88" rx="11" ry="9"/>
+      <circle cx="166" cy="66" r="4"/>
+      <ellipse cx="160" cy="116" rx="7" ry="5"/>
+      <circle cx="176" cy="94" r="3"/>
+      <circle cx="132" cy="62" r="2.5"/>
+    </g>
+
+    <!-- Dark cloud drifting across the moon -->
+    <path d="M 60 104 C 80 96 100 104 118 100 C 138 96 150 106 172 102 C 192 98 206 104 224 100 L 224 110 C 200 114 180 108 160 114 C 136 120 116 110 96 114 C 80 117 70 112 60 112 Z"
+          fill="#0c0b10" opacity="0.8" filter="url(#soft)" transform="translate(0 16)"/>
+    <path d="M 96 128 C 118 122 140 130 164 124 C 184 120 200 126 214 124 L 214 130 C 196 134 176 128 156 134 C 134 139 116 132 96 134 Z"
+          fill="#0c0b10" opacity="0.6" filter="url(#soft)"/>
+
+    <!-- Ruined towers on the horizon -->
+    <path d="M 0 190 L 0 168 L 10 168 L 10 160 L 16 156 L 22 160 L 22 172 L 34 172 L 34 150 L 38 144 L 42 152 L 42 176 L 58 178 L 58 190 Z
+             M 190 186 L 190 164 L 196 158 L 202 166 L 202 150 L 206 140 L 210 146 L 212 136 L 216 154 L 216 170 L 232 170 L 232 160 L 240 162 L 240 176 L 256 176 L 256 190 Z"
+          fill="#0a0708"/>
+
+    <!-- Crows -->
+    <g fill="none" stroke="#050405" stroke-width="2" stroke-linecap="round">
+      <path d="M 52 70 q 5 -5 9 0 q 4 -5 9 0"/>
+      <path d="M 78 52 q 3 -3 6 0 q 3 -3 6 0"/>
+      <path d="M 196 66 q 4 -4 7 0 q 3 -4 7 0"/>
+    </g>
+
+    <!-- Ash field -->
+    <path d="M 0 194 C 40 184 70 190 104 186 C 140 182 170 192 208 186 C 228 183 244 186 256 188 L 256 256 L 0 256 Z"
+          fill="url(#ground)"/>
+
+    <!-- Broken sword, planted point-down in the ash -->
+    <g transform="translate(128 0)">
+      <!-- Blade, snapped mid-length -->
+      <path d="M -9 104 L -4 98 L 1 103 L 5 97 L 9 102 L 9 196 L 0 210 L -9 196 Z" fill="url(#blade)"/>
+      <path d="M -1 104 L 1 104 L 1 194 L -1 194 Z" fill="#0e1011" opacity="0.7"/>
+      <!-- Old blood on the blade -->
+      <path d="M 9 150 L 9 176 C 6 172 5 164 6 158 C 7 154 8 152 9 150 Z" fill="#4a0c0c" opacity="0.85"/>
+      <!-- Crossguard, blackened iron -->
+      <path d="M -40 90 L -30 92 L 30 92 L 40 90 L 32 102 L -32 102 Z" fill="#1e1c1d"/>
+      <path d="M -40 90 L -30 92 L 30 92 L 40 90 L 37 94 L -37 94 Z" fill="#4d4a4a"/>
+      <!-- Grip -->
+      <rect x="-6" y="56" width="12" height="36" fill="#1a1110"/>
+      <path d="M -6 60 L 6 64 M -6 68 L 6 72 M -6 76 L 6 80 M -6 84 L 6 88" stroke="#3d2a24" stroke-width="2.5"/>
+      <!-- Pommel with a blood-red stone -->
+      <circle cx="0" cy="50" r="9" fill="#1e1c1d"/>
+      <circle cx="0" cy="50" r="9" fill="none" stroke="#4d4a4a" stroke-width="1.5"/>
+      <circle cx="0" cy="50" r="4" fill="#9e1a1a"/>
+      <circle cx="-1.5" cy="48.5" r="1.4" fill="#e65a4a"/>
+    </g>
+
+    <!-- Snapped blade tip lying in the ash -->
+    <path d="M 160 206 L 196 200 L 204 205 L 162 212 Z" fill="#2a2d2f"/>
+    <path d="M 160 206 L 196 200 L 204 205 Z" fill="#6a7073"/>
+
+    <!-- Embers drifting up -->
+    <circle cx="58" cy="160" r="1.8" fill="#d8452a"/>
+    <circle cx="84" cy="140" r="1.3" fill="#d8452a" opacity="0.7"/>
+    <circle cx="196" cy="150" r="1.8" fill="#d8452a"/>
+    <circle cx="176" cy="172" r="1.3" fill="#d8452a" opacity="0.6"/>
+    <circle cx="44" cy="180" r="1.3" fill="#d8452a" opacity="0.6"/>
+
+    <rect width="256" height="256" fill="url(#vignette)"/>
+  </g>
+
+  <!-- Iron frame -->
+  <rect x="10" y="10" width="236" height="236" rx="34" fill="none" stroke="#3a3536" stroke-width="4"/>
+  <rect x="16" y="16" width="224" height="224" rx="29" fill="none" stroke="#5c1414" stroke-width="1.5" opacity="0.8"/>
+</svg>

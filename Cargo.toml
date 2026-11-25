@@ -1,10 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-  "crates/common",
-  "crates/core/*",
-  "crates/game",
-]
+members = ["crates/common", "crates/core/*", "crates/game"]
 
 [workspace.package]
 version = "0.1.0"
@@ -19,6 +15,7 @@ neg_cmp_op_on_partial_ord = "allow"
 
 [workspace.dependencies]
 log = "0.4"
+enumflags2 = "0.7"
 
 [workspace.dependencies.godot]
 git = "https://github.com/godot-rust/gdext"
@@ -28,7 +25,7 @@ features = ["experimental-threads", "experimental-godot-api"]
 [workspace.dependencies.surreal]
 path = "vendor/surreal/surreal"
 default-features = false
-features = ["ecs", "godot", "gpu"]
+features = ["ecs", "godot"]
 
 [workspace.dependencies.surreal-build]
 path = "vendor/surreal/surreal-build"
