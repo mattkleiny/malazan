@@ -1,0 +1,34 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Native Player",
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "rust: cargo build",
+      "program": "/Applications/Godot.app/Contents/MacOS/Godot",
+      "args": [],
+      "cwd": "${workspaceFolder}/godot"
+    },
+    {
+      "name": "Native Editor",
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "rust: cargo build",
+      "program": "/Applications/Godot.app/Contents/MacOS/Godot",
+      "args": [
+        "--editor"
+      ],
+      "cwd": "${workspaceFolder}/godot"
+    },
+    {
+      "name": "Native Attach",
+      "type": "lldb",
+      "request": "attach",
+      "program": "/Applications/Godot.app/Contents/MacOS/Godot"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Allow `.unwrap()` in `#[cfg(test)]` / `#[test]` code while denying it elsewhere
+# via `workspace.lints.clippy.unwrap_used`.
+allow-unwrap-in-tests = true

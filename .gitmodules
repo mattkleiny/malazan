@@ -1,0 +1,3 @@
+[submodule "vendor/surreal"]
+	path = vendor/surreal
+	url = https://github.com/mattkleiny/surreal-gdext.git

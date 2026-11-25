@@ -1,0 +1,11 @@
+.godot/
+.idea/
+[Bb]in/
+[Oo]bj/
+*.user
+**/.DS_Store
+target/
+builds/
+.claude/
+*.translation
+*.blend1

@@ -1,0 +1,45 @@
+[configuration]
+entry_symbol = "gdext_rust_init"
+compatibility_minimum = 4.4
+
+[libraries]
+"android.debug" = "res://../target/debug/game.so"
+"android.release" = "res://../target/release/game.so"
+"android.editor" = "res://../target/debug/game.so"
+"ios.debug" = "res://../target/debug/libgame.ios.framework"
+"ios.release" = "res://../target/release/libgame.ios.framework"
+"ios.editor" = "res://../target/debug/libgame.ios.framework"
+"linux.debug" = "res://../target/debug/libgame.so"
+"linux.release" = "res://../target/release/libgame.so"
+"linux.editor" = "res://../target/debug/libgame.so"
+"macos.debug" = "res://../target/debug/libgame.dylib"
+"macos.release" = "res://../target/release/libgame.dylib"
+"macos.editor" = "res://../target/debug/libgame.dylib"
+"web.debug.wasm32" = "res://../target/wasm32-unknown-emscripten/debug/game.wasm"
+"web.release.wasm32" = "res://../target/wasm32-unknown-emscripten/release/game.wasm"
+"web.editor.wasm32" = "res://../target/wasm32-unknown-emscripten/debug/game.wasm"
+"windows.debug" = "res://../target/debug/game.dll"
+"windows.release" = "res://../target/release/game.dll"
+"windows.editor" = "res://../target/debug/game.dll"
+
+[icons]
+
+[dependencies]
+"linux.debug" = {
+  "res://../vendor/surreal/surreal-steam/libs/linux64/libsteam_api.so" : ""
+}
+"linux.release" = {
+  "res://../vendor/surreal/surreal-steam/libs/linux64/libsteam_api.so" : ""
+}
+"macos.debug" = {
+  "res://../vendor/surreal/surreal-steam/libs/osx/libsteam_api.dylib" : "Contents/Frameworks"
+}
+"macos.release" = {
+  "res://../vendor/surreal/surreal-steam/libs/osx/libsteam_api.dylib" : "Contents/Frameworks"
+}
+"windows.debug" = {
+  "res://../vendor/surreal/surreal-steam/libs/win64/steam_api64.dll" : ""
+}
+"windows.release" = {
+  "res://../vendor/surreal/surreal-steam/libs/win64/steam_api64.dll" : ""
+}

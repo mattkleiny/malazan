@@ -1,0 +1,496 @@
+# Release: build the Rust GDExtension natively per platform, then export every
+# preset from one Linux job (Godot can export Windows and macOS from Linux).
+# One build serves both: the `steam` feature connects to Steam when it runs and plays on without it.
+# Pushing a `v*` tag also publishes the exports as a GitHub Release, and uploads them to Steam
+# once the STEAM_* repository variables are set.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      platform_linux:
+        description: "Export for Linux"
+        type: boolean
+        default: true
+      platform_windows:
+        description: "Export for Windows"
+        type: boolean
+        default: true
+      platform_macos:
+        description: "Export for macOS"
+        type: boolean
+        default: true
+      godot_version:
+        description: "Godot version (a godotengine/godot-builds tag, e.g. 4.8-dev7 or 4.8-stable)"
+        type: string
+        default: "4.8-dev7"
+      blender_version:
+        description: "Blender series used to import .blend models (e.g. 5.2)"
+        type: string
+        default: "5.2"
+      steam_branch:
+        description: "Upload to this Steam branch and set it live"
+        type: string
+        default: "alpha"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: ${{ inputs.godot_version || '4.8-dev7' }}
+  BLENDER_VERSION: ${{ inputs.blender_version || '5.2' }}
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      libraries: ${{ steps.matrix.outputs.libraries }}
+      presets: ${{ steps.matrix.outputs.presets }}
+      version: ${{ steps.matrix.outputs.version }}
+      steam_branch: ${{ steps.matrix.outputs.steam_branch }}
+    steps:
+      - id: matrix
+        run: |
+          # Unset inputs (tag pushes) mean "export everything".
+          presets=()
+          libraries='[{"platform":"linux","runner":"ubuntu-22.04"}'
+          [ "${{ inputs.platform_linux }}" != "false" ] && presets+=("Linux")
+          if [ "${{ inputs.platform_windows }}" != "false" ]; then
+            presets+=("Windows")
+            libraries="$libraries,{\"platform\":\"windows\",\"runner\":\"windows-latest\"}"
+          fi
+          if [ "${{ inputs.platform_macos }}" != "false" ]; then
+            presets+=("macOS")
+            libraries="$libraries,{\"platform\":\"macos\",\"runner\":\"macos-latest\"}"
+          fi
+          libraries="$libraries]"
+          if [ ${#presets[@]} -eq 0 ]; then
+            echo "::error::Select at least one platform"
+            exit 1
+          fi
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            version="${{ github.ref_name }}"
+          else
+            version="${GITHUB_SHA::7}"
+          fi
+
+          # Tags go to Steam once it is configured; manual runs only when asked for a branch.
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            steam_branch="${{ vars.STEAM_APP_ID && (vars.STEAM_BRANCH || 'beta') || '' }}"
+          else
+            steam_branch="${{ inputs.steam_branch }}"
+          fi
+          if [ -n "$steam_branch" ] && [ -z "${{ vars.STEAM_APP_ID }}" ]; then
+            echo "::error::Set the STEAM_APP_ID repository variable to upload to Steam"
+            exit 1
+          fi
+
+          echo "libraries=$libraries" >> "$GITHUB_OUTPUT"
+          echo "presets=${presets[*]}" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "steam_branch=$steam_branch" >> "$GITHUB_OUTPUT"
+          echo "Libraries: $libraries"
+          echo "Presets: ${presets[*]}"
+          echo "Version: $version"
+          echo "Steam branch: ${steam_branch:-none}"
+
+  # The Linux library is always built: the headless editor that runs the export
+  # loads it to register the extension's classes.
+  library:
+    name: Library (${{ matrix.platform }})
+    needs: setup
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.setup.outputs.libraries) }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SURREAL_REPO_TOKEN }}
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-03-12
+          targets: ${{ matrix.platform == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.platform }}
+
+      - name: Setup just
+        uses: extractions/setup-just@v4
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            just build-macos-universal
+          else
+            just build
+          fi
+
+      - name: Upload library
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-${{ matrix.platform }}
+          if-no-files-found: error
+          path: |
+            target/release/libgame.so
+            target/release/game.dll
+            target/release/libgame.dylib
+
+  export:
+    name: Export
+    needs: [setup, library]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.setup.outputs.version }}
+    steps:
+      # The submodule carries Steam's redistributables, which game.gdextension copies into every export.
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SURREAL_REPO_TOKEN }}
+          lfs: true
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Verify Steam libraries
+        run: |
+          missing=0
+          for lib in $(grep -o 'res://\.\./vendor/[^"]*' godot/game.gdextension | sort -u); do
+            if [ ! -f "godot/${lib#res://}" ]; then
+              echo "::error::Missing ${lib#res://../}, which game.gdextension exports"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Download libraries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: library-*
+          path: target/release
+          merge-multiple: true
+
+      - name: Stage editor library
+        run: |
+          # The editor loads the `linux.editor` entry from game.gdextension (target/debug).
+          # The release library is built without the `editor` feature; exporting needs none of its editor-only classes.
+          mkdir -p target/debug
+          # The library links Steam's, which it finds beside itself.
+          cp target/release/libgame.so target/debug/libgame.so
+          cp vendor/surreal/surreal-steam/libs/linux64/libsteam_api.so target/debug/
+          ls -la target/release target/debug
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          base="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}"
+          # A cache miss can still restore a near match (key prefix), so start clean.
+          rm -rf ~/godot
+          mkdir -p ~/godot/templates
+          curl -fsSL "$base/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -o godot.zip
+          unzip -q godot.zip -d ~/godot
+          mv ~/godot/Godot_v${GODOT_VERSION}_linux.x86_64 ~/godot/godot
+
+          # Keep only the templates the presets use so the cache stays small.
+          curl -fsSL "$base/Godot_v${GODOT_VERSION}_export_templates.tpz" -o templates.tpz
+          unzip -q -j templates.tpz \
+            templates/version.txt \
+            'templates/linux_*.x86_64' \
+            'templates/windows_*_x86_64*.exe' \
+            templates/macos.zip \
+            -d ~/godot/templates
+          rm godot.zip templates.tpz
+
+      - name: Configure Godot
+        run: |
+          echo "GODOT=$HOME/godot/godot" >> "$GITHUB_ENV"
+          template_version="$(cat ~/godot/templates/version.txt)"
+          mkdir -p ~/.local/share/godot/export_templates
+          ln -sfn ~/godot/templates ~/.local/share/godot/export_templates/${template_version}
+          ~/godot/godot --version
+
+      - name: Cache Blender
+        id: cache-blender
+        uses: actions/cache@v4
+        with:
+          path: ~/blender
+          key: blender-${{ env.BLENDER_VERSION }}
+
+      - name: Install Blender
+        if: steps.cache-blender.outputs.cache-hit != 'true'
+        run: |
+          base="https://download.blender.org/release/Blender${BLENDER_VERSION}"
+          tarball="$(curl -fsSL "$base/" | grep -o "blender-${BLENDER_VERSION}\.[0-9]*-linux-x64\.tar\.xz" | sort -uV | tail -1)"
+          if [ -z "$tarball" ]; then
+            echo "::error::No Linux build of Blender ${BLENDER_VERSION} at $base"
+            exit 1
+          fi
+          echo "Downloading $tarball"
+          mkdir -p ~/blender
+          curl -fsSL "$base/$tarball" | tar -xJ --strip-components=1 -C ~/blender
+
+      - name: Configure Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            libxrender1 libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libsm6 libgl1 libegl1
+          ~/blender/blender --version
+
+          # Point the editor's .blend importer at Blender.
+          settings_version="$(~/godot/godot --version | grep -oE '^[0-9]+\.[0-9]+')"
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-${settings_version}.tres <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          filesystem/import/blender/blender_path = "$HOME/blender/blender"
+          EOF
+
+      - name: Setup just
+        uses: extractions/setup-just@v4
+
+      - name: Stamp project version
+        run: just stamp-version
+
+      # Godot's progress bars are thousands of lines; the full output stays in import.log.
+      - name: Import
+        shell: bash
+        run: just import 2>&1 | tee import.log | { grep -vE "$GODOT_PROGRESS" || true; }
+        env:
+          GODOT_PROGRESS: '^\[ *[0-9]+% \]|\[ DONE \]|^.\[0m$'
+
+      # A failed import still exits 0, and the export then ships without the asset.
+      - name: Verify import
+        run: |
+          errors="$(grep -E "^(ERROR|SCRIPT ERROR)" import.log | sort | uniq -c | sort -rn | head -30 || true)"
+          echo "$errors"
+          printf '### Import errors\n```\n%s\n```\n' "$errors" >> "$GITHUB_STEP_SUMMARY"
+
+          # Every output an `.import` file declares must exist.
+          failed=0
+          for import in $(git ls-files 'godot/*.import'); do
+            for dest in $(grep '^dest_files=' "$import" | grep -o 'res://[^"]*'); do
+              if [ ! -e "godot/${dest#res://}" ]; then
+                echo "::error file=${import%.import}::Not imported: $dest"
+                failed=1
+              fi
+            done
+          done
+          exit $failed
+
+      - name: Export
+        shell: bash
+        env:
+          GODOT_PROGRESS: '^\[ *[0-9]+% \]|\[ DONE \]|^.\[0m$'
+        run: |
+          for preset in ${{ needs.setup.outputs.presets }}; do
+            echo "::group::Export $preset"
+            just export "$preset" 2>&1 | tee "export-$preset.log" | { grep -vE "$GODOT_PROGRESS" || true; }
+            echo "::endgroup::"
+
+            # Without the extension, the export ships its resources broken yet still exits 0.
+            if grep -q "Can't open GDExtension" "export-$preset.log"; then
+              echo "::error::The editor could not load the extension while exporting $preset"
+              exit 1
+            fi
+          done
+
+      - name: Package
+        env:
+          DIST: dist
+        run: |
+          mkdir -p "$DIST"
+          name="Game-${VERSION}"
+          if [ -d builds/linux ]; then
+            tar -czf "${DIST}/${name}-linux-x86_64.tar.gz" -C builds/linux .
+          fi
+          if [ -d builds/windows ]; then
+            (cd builds/windows && zip -qr "../../${DIST}/${name}-windows-x86_64.zip" .)
+          fi
+          if [ -f builds/macos/Game.zip ]; then
+            cp builds/macos/Game.zip "${DIST}/${name}-macos-universal.zip"
+          fi
+          ls -la "$DIST"
+
+      - name: Upload exports
+        uses: actions/upload-artifact@v4
+        with:
+          name: Game-${{ env.VERSION }}
+          path: dist/
+          if-no-files-found: error
+          compression-level: 0
+
+  release:
+    name: Publish release
+    needs: [setup, export]
+    if: ${{ !cancelled() && needs.export.result == 'success' && github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download exports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Game-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # Uploads each exported platform to its own depot and sets the build live on the branch.
+  steam:
+    name: Publish to Steam
+    needs: [setup, export]
+    if: ${{ !cancelled() && needs.export.result == 'success' && needs.setup.outputs.steam_branch != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.setup.outputs.version }}
+    steps:
+      - name: Download exports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Game-*
+          path: dist
+          merge-multiple: true
+
+      # Unpacked from the archives rather than separate artifacts, which would drop executable bits.
+      # Depot IDs run Linux, Windows, macOS from STEAM_FIRST_DEPOT_ID, or the app ID plus one.
+      # steam-deploy numbers the depots it is given consecutively, so the exported platforms must be adjacent:
+      # the first one sets the first depot ID, and a platform left out between two others is refused.
+      - name: Unpack depots
+        id: depots
+        env:
+          APP_ID: ${{ vars.STEAM_APP_ID }}
+          FIRST_DEPOT_ID: ${{ vars.STEAM_FIRST_DEPOT_ID }}
+        run: |
+          name="Game-${VERSION}"
+          base="${FIRST_DEPOT_ID:-$((APP_ID + 1))}"
+          platforms=(linux windows macos)
+          archives=("${name}-linux-x86_64.tar.gz" "${name}-windows-x86_64.zip" "${name}-macos-universal.zip")
+          present=()
+          for i in 0 1 2; do
+            platform="${platforms[$i]}"
+            archive="dist/${archives[$i]}"
+            [ -f "$archive" ] || continue
+            if [ ${#present[@]} -gt 0 ] && [ "${last}" -ne $((i - 1)) ]; then
+              echo "::error::Steam needs adjacent depots; export ${platforms[$((i - 1))]} too or leave $platform out"
+              exit 1
+            fi
+            [ ${#present[@]} -eq 0 ] && echo "first_depot=$((base + i))" >> "$GITHUB_OUTPUT"
+            mkdir -p "depots/$platform"
+            case "$archive" in
+              *.tar.gz) tar -xzf "$archive" -C "depots/$platform" ;;
+              *.zip) unzip -q "$archive" -d "depots/$platform" ;;
+            esac
+            present+=("$platform")
+            echo "depot${#present[@]}=$platform" >> "$GITHUB_OUTPUT"
+            last=$i
+          done
+          if [ ${#present[@]} -eq 0 ]; then
+            echo "::error::No platform was exported to upload"
+            exit 1
+          fi
+          echo "platforms=${present[*]}" >> "$GITHUB_OUTPUT"
+          ls -la depots/*
+
+      # A fresh Steam Guard code each run, so there is no saved login to expire.
+      - name: Steam Guard code
+        id: totp
+        uses: CyberAndrii/steam-totp@v1
+        with:
+          shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
+      # steamcmd cannot set the default branch live, so that is done through the Web API below.
+      - name: Upload
+        id: upload
+        uses: game-ci/steam-deploy@v3.2.2
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          password: ${{ secrets.STEAM_PASSWORD }}
+          totp: ${{ steps.totp.outputs.code }}
+          appId: ${{ vars.STEAM_APP_ID }}
+          firstDepotIdOverride: ${{ steps.depots.outputs.first_depot }}
+          buildDescription: ${{ env.VERSION }} (${{ github.sha }})
+          rootPath: depots
+          depot1Path: ${{ steps.depots.outputs.depot1 }}
+          depot2Path: ${{ steps.depots.outputs.depot2 }}
+          depot3Path: ${{ steps.depots.outputs.depot3 }}
+          releaseBranch: ${{ needs.setup.outputs.steam_branch != 'default' && needs.setup.outputs.steam_branch || '' }}
+          cliVersion: v0.1.72
+
+      # Released apps need STEAM_CONFIRM_STEAMID, whose Steam Mobile app is asked to confirm the change.
+      - name: Set live on default
+        id: default
+        if: ${{ needs.setup.outputs.steam_branch == 'default' }}
+        env:
+          PUBLISHER_KEY: ${{ secrets.STEAM_PUBLISHER_KEY }}
+          APP_ID: ${{ vars.STEAM_APP_ID }}
+          BUILD_ID: ${{ steps.upload.outputs.buildId }}
+          CONFIRM_STEAMID: ${{ vars.STEAM_CONFIRM_STEAMID }}
+        run: |
+          if [ -z "$PUBLISHER_KEY" ]; then
+            echo "::error::Set the STEAM_PUBLISHER_KEY secret to set builds live on the default branch"
+            exit 1
+          fi
+          if [ -z "$BUILD_ID" ]; then
+            echo "::error::The upload reported no BuildID; set it live on default in Steamworks"
+            exit 1
+          fi
+          args=(--data-urlencode "key=$PUBLISHER_KEY" --data-urlencode "appid=$APP_ID"
+            --data-urlencode "buildid=$BUILD_ID" --data-urlencode "betakey=public"
+            --data-urlencode "description=${VERSION} (${GITHUB_SHA})")
+          if [ -n "$CONFIRM_STEAMID" ]; then
+            args+=(--data-urlencode "steamid=$CONFIRM_STEAMID")
+          fi
+          status="$(curl -sS -o response.json -w '%{http_code}' -X POST \
+            https://partner.steam-api.com/ISteamApps/SetAppBuildLive/v2/ "${args[@]}")"
+          cat response.json; echo
+          case "$status" in
+            200) echo "state=set live" >> "$GITHUB_OUTPUT" ;;
+            201) echo "state=awaiting Steam Mobile confirmation to go live" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::SetAppBuildLive returned HTTP $status"; exit 1 ;;
+          esac
+
+      - name: Summary
+        env:
+          BUILD_ID: ${{ steps.upload.outputs.buildId }}
+          STEAM_BRANCH: ${{ needs.setup.outputs.steam_branch }}
+          STATE: ${{ steps.default.outputs.state || 'set live' }}
+          DEPOTS: ${{ steps.depots.outputs.platforms }}
+        run: |
+          {
+            echo "### Steam"
+            echo "Uploaded ${VERSION} (BuildID ${BUILD_ID:-unknown}; ${DEPOTS}): ${STATE} on \`${STEAM_BRANCH}\`."
+          } >> "$GITHUB_STEP_SUMMARY"

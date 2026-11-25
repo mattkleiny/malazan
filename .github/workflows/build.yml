@@ -1,0 +1,36 @@
+name: Build and Test
+
+on:
+  workflow_dispatch: # Disabled for now; restore the push trigger when ready.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SURREAL_REPO_TOKEN }}
+          persist-credentials: false
+          submodules: recursive
+
+      # The channel comes from rust-toolchain.toml, which pins the nightly the devcontainer uses.
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-03-12
+          components: rustfmt
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup just
+        uses: extractions/setup-just@v4
+
+      - name: Build and test
+        run: just test

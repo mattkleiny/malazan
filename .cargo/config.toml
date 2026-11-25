@@ -1,0 +1,40 @@
+# Parallel rustc frontend (nightly). 0 = one thread per core.
+[build]
+rustflags = ["-Zthreads=0"]
+
+# lld cannot parse the macOS 27 SDK TBD files (unknown arch arm64e.x1), so stay
+# on Apple ld and skip its debug-link dedup pass. Target rustflags replace
+# [build], so -Zthreads is repeated here.
+[target.'cfg(target_os = "macos")']
+rustflags = ["-Zthreads=0", "-C", "link-arg=-Wl,-no_deduplicate"]
+
+# Dev profile is tuned for iteration speed, not for maximum runtime throughput.
+[profile.dev]
+opt-level = 1
+debug = "line-tables-only" # Backtraces keep file/line; drops ~75% of the .so size and most of the link time.
+split-debuginfo = "unpacked" # Skip dsymutil on each cdylib link.
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# gdext bindings - glue, not hot code. Leave them unoptimised.
+[profile.dev.package.godot]
+opt-level = 0
+[profile.dev.package.godot-core]
+opt-level = 0
+[profile.dev.package.godot-ffi]
+opt-level = 0
+[profile.dev.package.godot-codegen]
+opt-level = 0
+[profile.dev.package.godot-macros]
+opt-level = 0
+
+# Proc macros and build scripts run on the host during compilation
+[profile.dev.build-override]
+opt-level = 0
+
+# Enable more optimization in the release profile at the cost of compile time.
+[profile.release]
+codegen-units = 1
+lto = "thin"
+

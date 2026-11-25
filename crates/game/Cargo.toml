@@ -1,0 +1,25 @@
+[package]
+name = "game"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+surreal-build = { workspace = true }
+
+[dependencies]
+surreal = { workspace = true }
+game-common = { path = "../common", default-features = false }
+godot = { workspace = true }
+log = { workspace = true }
+
+[features]
+default = ["register-docs", "editor"]
+register-docs = ["godot/register-docs"]
+steam = ["surreal/steam"]
+editor = ["surreal/editor"]
+
+[lints]
+workspace = true

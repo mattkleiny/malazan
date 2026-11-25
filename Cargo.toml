@@ -1,0 +1,34 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/common",
+  "crates/core/*",
+  "crates/game",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.lints.clippy]
+approx_constant = "allow"
+new_without_default = "allow"
+redundant_field_names = "allow"
+unwrap_used = "deny"
+neg_cmp_op_on_partial_ord = "allow"
+
+[workspace.dependencies]
+log = "0.4"
+
+[workspace.dependencies.godot]
+git = "https://github.com/godot-rust/gdext"
+rev = "7634726078f9e2bd6838f260c57e1fcfaaae1163"
+features = ["experimental-threads", "experimental-godot-api"]
+
+[workspace.dependencies.surreal]
+path = "vendor/surreal/surreal"
+default-features = false
+features = ["ecs", "godot", "gpu"]
+
+[workspace.dependencies.surreal-build]
+path = "vendor/surreal/surreal-build"
