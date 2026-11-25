@@ -22,6 +22,8 @@ Core game logic lives in `crates/` as an ECS-based Rust workspace. `crates/commo
 
 Godot (`godot/`) is the presentation layer: rendering, input, UI, and scenes. It talks to the simulation through the `game` GDExtension crate. Gameplay logic lives in `crates/`, while high-level flow, events, scripting and input can live in `godot/` as GDScript.
 
+The editor icon folder is `godot/editor/icons/` (`res://editor/icons/`). Every GDScript node or resource type gets an `@icon` SVG there, named after its script.
+
 A new crate needs a `path` dependency **and** an `extern crate` line in `crates/game/src/lib.rs`, or it is never linked: its `GodotClass` types silently vanish from the extension and its system installer never runs. A new core crate goes in `crates/core/<domain>`, named `game-<domain>`; the workspace picks it up through the `crates/core/*` glob.
 
 ## Working in this repo
