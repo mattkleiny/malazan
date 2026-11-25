@@ -1,0 +1,13 @@
+[package]
+name = "game-terrain"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+surreal = { workspace = true }
+game-map = { path = "../map" }
+godot = { workspace = true }
+log = { workspace = true }

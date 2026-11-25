@@ -3,6 +3,8 @@
 use godot::prelude::*;
 
 extern crate game_common;
+extern crate game_map;
+extern crate game_terrain;
 
 /// The entry point for the extension library.
 struct GameLibrary;

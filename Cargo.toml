@@ -16,6 +16,7 @@ neg_cmp_op_on_partial_ord = "allow"
 [workspace.dependencies]
 log = "0.4"
 enumflags2 = "0.7"
+png = "0.17"
 
 [workspace.dependencies.godot]
 git = "https://github.com/godot-rust/gdext"
