@@ -82,6 +82,15 @@ impl LocationRaster {
       .copied()
   }
 
+  /// Paints a cell with a location; one off the map is left alone.
+  pub fn set_cell(&mut self, column: i64, row: i64, location: LocationId) {
+    if row < 0 || row >= i64::from(self.height) || column < 0 || column >= i64::from(self.width) {
+      return;
+    }
+
+    self.cells[row as usize * self.width as usize + column as usize] = location;
+  }
+
   /// The location under a point of the map.
   pub fn location_at(&self, position: MapPosition) -> Option<LocationId> {
     if !position.x.is_finite() || !position.y.is_finite() {

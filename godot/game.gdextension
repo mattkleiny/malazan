@@ -27,6 +27,10 @@ MapCamera = "res://editor/icons/MapCamera.svg"
 MapModeBar = "res://editor/icons/MapModeBar.svg"
 MapView = "res://editor/icons/MapView.svg"
 TerrainView = "res://editor/icons/TerrainView.svg"
+map_brush_panel = "res://editor/icons/map_brush_panel.svg"
+map_editor_dock = "res://editor/icons/map_editor_dock.svg"
+map_location_inspector = "res://editor/icons/map_location_inspector.svg"
+map_location_list = "res://editor/icons/map_location_list.svg"
 
 [dependencies]
 "linux.debug" = {

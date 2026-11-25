@@ -31,6 +31,23 @@ impl Heightfield {
     &self.samples
   }
 
+  /// The height (0..1) of one sample, held at the nearest edge for one off the
+  /// map.
+  pub fn sample_at(&self, column: i64, row: i64) -> f64 {
+    self.sample(column, row)
+  }
+
+  /// Sets the height (0..1) of one sample; one off the map is left alone.
+  pub fn set_sample(&mut self, column: i64, row: i64, height: f64) {
+    if row < 0 || row >= i64::from(self.height) || column < 0 || column >= i64::from(self.width) {
+      return;
+    }
+
+    let index = row as usize * self.width as usize + column as usize;
+
+    self.samples[index] = (height.clamp(0.0, 1.0) * f64::from(u16::MAX)).round() as u16;
+  }
+
   /// The height (0..1) at a point given as a share of the map's width and
   /// height, blended between the nearest samples.
   pub fn height_at(&self, u: f64, v: f64) -> f64 {

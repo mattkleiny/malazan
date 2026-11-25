@@ -1,6 +1,6 @@
 //! Reading the map's source images.
 
-use png::{BitDepth, ColorType, Decoder, Transformations};
+use png::{BitDepth, ColorType, Decoder, Encoder, Transformations};
 
 /// An image's pixels as one 16-bit sample per channel.
 pub struct Pixels {
@@ -68,6 +68,28 @@ pub fn decode_png(bytes: &[u8]) -> Option<Pixels> {
     channels,
     samples,
   })
+}
+
+/// Encodes 8-bit colour pixels, row by row, as a PNG file.
+pub fn encode_rgb8(width: u32, height: u32, pixels: &[u8]) -> Option<Vec<u8>> {
+  encode(width, height, ColorType::Rgb, BitDepth::Eight, pixels)
+}
+
+/// Encodes 16-bit grey samples, row by row, as a PNG file.
+pub fn encode_grey16(width: u32, height: u32, samples: &[u16]) -> Option<Vec<u8>> {
+  let bytes: Vec<u8> = samples.iter().flat_map(|sample| sample.to_be_bytes()).collect();
+
+  encode(width, height, ColorType::Grayscale, BitDepth::Sixteen, &bytes)
+}
+
+fn encode(width: u32, height: u32, color: ColorType, depth: BitDepth, data: &[u8]) -> Option<Vec<u8>> {
+  let mut bytes = Vec::new();
+  let mut encoder = Encoder::new(&mut bytes, width, height);
+  encoder.set_color(color);
+  encoder.set_depth(depth);
+  encoder.write_header().ok()?.write_image_data(data).ok()?;
+
+  Some(bytes)
 }
 
 #[cfg(test)]

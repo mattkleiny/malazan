@@ -1,0 +1,206 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://addons/map_editor/map_editor_dock.gd" id="1"]
+[ext_resource type="Script" path="res://addons/map_editor/map_brush_panel.gd" id="2"]
+[ext_resource type="Script" path="res://addons/map_editor/map_location_list.gd" id="3"]
+[ext_resource type="Script" path="res://addons/map_editor/map_location_inspector.gd" id="4"]
+
+[node name="Map" type="VBoxContainer"]
+custom_minimum_size = Vector2(260, 0)
+script = ExtResource("1")
+
+[node name="BrushPanel" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2")
+
+[node name="Tools" type="HBoxContainer" parent="BrushPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Select" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Choose a location to inspect. With Paint, hold Alt to pick a location instead."
+text = "Select"
+
+[node name="Paint" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Paint the chosen location over the map."
+text = "Paint"
+
+[node name="Raise" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Raise the ground."
+text = "Raise"
+
+[node name="Lower" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Lower the ground."
+text = "Lower"
+
+[node name="Smooth" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Smooth the ground."
+text = "Smooth"
+
+[node name="Flatten" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Level the ground to the height where the stroke began."
+text = "Flatten"
+
+[node name="RadiusRow" type="HBoxContainer" parent="BrushPanel"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BrushPanel/RadiusRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Radius"
+
+[node name="Radius" type="HSlider" parent="BrushPanel/RadiusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.5
+max_value = 64.0
+step = 0.5
+value = 6.0
+
+[node name="StrengthRow" type="HBoxContainer" parent="BrushPanel"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BrushPanel/StrengthRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Strength"
+
+[node name="Strength" type="HSlider" parent="BrushPanel/StrengthRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.05
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="BrushSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="LocationList" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("3")
+
+[node name="Search" type="LineEdit" parent="LocationList"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Find a location"
+clear_button_enabled = true
+
+[node name="Items" type="ItemList" parent="LocationList"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+size_flags_vertical = 3
+item_count = 3
+item_0/text = "Aren"
+item_1/text = "Ehrlitan"
+item_2/text = "Pan'potsun"
+
+[node name="AddButton" type="Button" parent="LocationList"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Add a location in the same divisions as the chosen one, ready to paint."
+text = "New location"
+
+[node name="LocationInspector" type="GridContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+script = ExtResource("4")
+
+[node name="NameLabel" type="Label" parent="LocationInspector"]
+layout_mode = 2
+text = "Name"
+
+[node name="Name" type="LineEdit" parent="LocationInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Aren"
+
+[node name="ProvinceLabel" type="Label" parent="LocationInspector"]
+layout_mode = 2
+text = "Province"
+
+[node name="Province" type="LineEdit" parent="LocationInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Aren Coast"
+
+[node name="AreaLabel" type="Label" parent="LocationInspector"]
+layout_mode = 2
+text = "Area"
+
+[node name="Area" type="LineEdit" parent="LocationInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Raraku"
+
+[node name="RegionLabel" type="Label" parent="LocationInspector"]
+layout_mode = 2
+text = "Region"
+
+[node name="Region" type="LineEdit" parent="LocationInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Seven Cities"
+
+[node name="ContinentLabel" type="Label" parent="LocationInspector"]
+layout_mode = 2
+text = "Continent"
+
+[node name="Continent" type="LineEdit" parent="LocationInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Quon Tali"
+
+[node name="TerrainLabel" type="Label" parent="LocationInspector"]
+layout_mode = 2
+text = "Terrain"
+
+[node name="Terrain" type="OptionButton" parent="LocationInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SaveSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="SaveRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="SaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Write the map back to its files. Saving the scene saves it too."
+text = "Save map"
+
+[node name="Status" type="Label" parent="SaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Saved"
+text_overrun_behavior = 3

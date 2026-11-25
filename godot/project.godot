@@ -21,3 +21,7 @@ config/icon="uid://dihioy3ar2vyo"
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/map_editor/plugin.cfg")

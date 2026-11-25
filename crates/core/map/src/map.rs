@@ -6,7 +6,7 @@ use surreal::{cvar, ecs::Component};
 
 use crate::{
   adjacency::Adjacency,
-  definitions::parse_definitions,
+  definitions::{Definitions, parse_definitions},
   divisions::{Area, Continent, Province, Region},
   heights::Heightfield,
   images::decode_png,
@@ -36,6 +36,11 @@ pub enum MapError {
   NoLocations,
   UnreadableImage { image: &'static str },
   UnknownColors { colors: Vec<[u8; 3]> },
+  UnwritableText { text: String },
+  UnknownLocation,
+  LocationInUse { name: String },
+  MissingLocations,
+  UnwritableImage { image: &'static str },
 }
 
 impl fmt::Display for MapError {
@@ -59,6 +64,14 @@ impl fmt::Display for MapError {
       Self::NoLocations => write!(f, "the definitions name no locations"),
       Self::UnreadableImage { image } => write!(f, "the {image} image could not be read"),
       Self::UnknownColors { colors } => write!(f, "the locations image uses undefined key colours: {colors:?}"),
+      Self::UnwritableText { text } => write!(
+        f,
+        "'{text}' cannot be written to the definitions: it is empty or holds a comma or line break"
+      ),
+      Self::UnknownLocation => write!(f, "no such location"),
+      Self::LocationInUse { name } => write!(f, "'{name}' is still painted on the map"),
+      Self::MissingLocations => write!(f, "the map is painted with locations the definitions do not name"),
+      Self::UnwritableImage { image } => write!(f, "the {image} image could not be written"),
     }
   }
 }
@@ -118,19 +131,31 @@ impl Map {
   pub fn from_parts(parts: MapParts) -> Result<Self, MapError> {
     let definitions = parse_definitions(parts.definitions)?;
     let raster = LocationRaster::from_key_colors(parts.width, parts.height, parts.key_colors, &definitions.locations)?;
+
+    Ok(Self::assembled(definitions, raster, parts.heights, parts.sea_level))
+  }
+
+  /// Puts a map together from parts already read and checked.
+  pub fn assembled(definitions: Definitions, raster: LocationRaster, heights: Heightfield, sea_level: f64) -> Self {
     let adjacency = Adjacency::from_raster(&raster, definitions.locations.len());
 
-    Ok(Self {
+    Self {
       locations: definitions.locations,
       provinces: definitions.provinces,
       areas: definitions.areas,
       regions: definitions.regions,
       continents: definitions.continents,
       raster,
-      heights: parts.heights,
+      heights,
       adjacency,
-      sea_level: parts.sea_level,
-    })
+      sea_level,
+    }
+  }
+
+  /// Finds every location's neighbours afresh, after the raster has been
+  /// painted.
+  pub fn refresh_adjacency(&mut self) {
+    self.adjacency = Adjacency::from_raster(&self.raster, self.locations.len());
   }
 
   /// Distance from the western edge to the eastern (map units).

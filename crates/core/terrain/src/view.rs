@@ -1,5 +1,6 @@
 //! The terrain view: the node that draws the map and picks locations on it.
 
+mod editing;
 mod selections;
 mod textures;
 
@@ -39,7 +40,7 @@ struct Chunk {
 /// Draws the map's surface in chunks, finer near the camera, and finds the
 /// location under a point of the screen.
 #[derive(GodotClass)]
-#[class(init, base = Node3D)]
+#[class(init, tool, base = Node3D)]
 pub struct TerrainView {
   base: Base<Node3D>,
 
@@ -73,6 +74,9 @@ pub struct TerrainView {
   grid: Option<ChunkGrid>,
   meshes: Vec<Gd<ArrayMesh>>, // One per level of detail.
   chunks: Vec<Chunk>,
+  textures: Option<MapTextures>,
+  view_camera: Option<Gd<Camera3D>>, // Looks at the map in place of the viewport's camera, as the editor's does.
+  editing: editing::EditState,
 }
 
 #[godot_api]
@@ -259,9 +263,9 @@ impl TerrainView {
 
     let grid = ChunkGrid::covering(map.width(), map.height());
 
-    self.set_parameter("heights_tex", &textures.heights.to_variant());
-    self.set_parameter("locations_tex", &textures.locations.to_variant());
-    self.set_parameter("borders_tex", &textures.borders.to_variant());
+    self.set_parameter("heights_tex", &textures.heights.texture.to_variant());
+    self.set_parameter("locations_tex", &textures.locations.texture.to_variant());
+    self.set_parameter("borders_tex", &textures.borders.texture.to_variant());
     self.set_parameter(
       "map_size",
       &Vector2::new(map.width() as f32, map.height() as f32).to_variant(),
@@ -297,6 +301,7 @@ impl TerrainView {
     }
 
     self.grid = Some(grid);
+    self.textures = Some(textures);
     self.map = Some(map);
     self.chosen_mode = map_modes().first().copied();
     self.show_mode();
@@ -333,7 +338,12 @@ impl TerrainView {
     let Some(grid) = self.grid else {
       return;
     };
-    let Some(camera) = self.base().get_viewport().and_then(|viewport| viewport.get_camera_3d()) else {
+    let camera = self
+      .view_camera
+      .clone()
+      .filter(|camera| camera.is_instance_valid())
+      .or_else(|| self.base().get_viewport().and_then(|viewport| viewport.get_camera_3d()));
+    let Some(camera) = camera else {
       return;
     };
 

@@ -28,3 +28,11 @@ This is the project's ubiquitous language: one line per term, grouped by section
 - **Map Mode Bar**: The row of map mode icons along the bottom of the screen; resting on one previews its mode, pressing it chooses it. _Avoid_: toolbar, mode picker
 - **Pick**: The point of the map, and its location, under the cursor. _Avoid_: raycast, hit test
 - **Selection**: The thing picking the map chooses in the shown map mode: a location, a whole province or region, or something a map mode offers, such as the wealth of an area. It is lit while hovered or chosen, and described to the player. _Avoid_: target, focus
+
+## Map editing
+
+- **Map Editor**: The editor tool for changing the map in place: painting locations, shaping the ground and editing the definitions. _Avoid_: level editor, map tool
+- **Definitions**: The table naming every location, the divisions it sits in, its terrain and its key colour. _Avoid_: province table, map data
+- **Brush**: The circle of ground a map editor tool acts on, with a radius and a strength. _Avoid_: cursor, pen
+- **Stroke**: One press-drag-release of a brush; it is undone and redone as one. _Avoid_: drag, paint operation
+- **Sculpt**: Raising, lowering, smoothing or flattening the ground with a brush. _Avoid_: terraform, deform

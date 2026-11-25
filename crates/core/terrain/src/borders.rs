@@ -84,19 +84,25 @@ pub fn cell_borders(map: &Map) -> Vec<CellBorders> {
 
   for row in 0..i64::from(raster.height()) {
     for column in 0..i64::from(raster.width()) {
-      let rank_towards = |neighbour: Option<LocationId>| match (raster.cell(column, row), neighbour) {
-        (Some(here), Some(there)) => rank_between(map, here, there),
-        _ => BorderRank::None,
-      };
-
-      borders.push(CellBorders {
-        east: rank_towards(raster.cell(column + 1, row)),
-        south: rank_towards(raster.cell(column, row + 1)),
-      });
+      borders.push(borders_of(map, column, row));
     }
   }
 
   borders
+}
+
+/// The borders on one cell's eastern and southern sides.
+pub fn borders_of(map: &Map, column: i64, row: i64) -> CellBorders {
+  let raster = &map.raster;
+  let rank_towards = |neighbour: Option<LocationId>| match (raster.cell(column, row), neighbour) {
+    (Some(here), Some(there)) => rank_between(map, here, there),
+    _ => BorderRank::None,
+  };
+
+  CellBorders {
+    east: rank_towards(raster.cell(column + 1, row)),
+    south: rank_towards(raster.cell(column, row + 1)),
+  }
 }
 
 #[cfg(test)]
