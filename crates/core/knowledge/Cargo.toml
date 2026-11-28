@@ -1,0 +1,11 @@
+[package]
+name = "game-knowledge"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+surreal = { workspace = true }
+godot = { workspace = true }

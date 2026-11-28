@@ -4,6 +4,7 @@
 [ext_resource type="Material" path="res://terrain/material_terrain.tres" id="2"]
 [ext_resource type="Script" uid="uid://de8on2r0pbu7w" path="res://camera/map_camera.gd" id="3"]
 [ext_resource type="PackedScene" path="res://ui/map_mode_bar.tscn" id="4"]
+[ext_resource type="Script" uid="uid://ca71gflwlygqd" path="res://knowledge/knowledge_label.gd" id="5"]
 
 [sub_resource type="Environment" id="Environment_sky"]
 background_mode = 1
@@ -44,10 +45,13 @@ offset_bottom = 90.0
 [node name="Lines" type="VBoxContainer" parent="Hud/Panel" unique_id=1268088729]
 layout_mode = 2
 
-[node name="ModeLabel" type="Label" parent="Hud/Panel/Lines" unique_id=956522979]
+[node name="ModeLabel" type="RichTextLabel" parent="Hud/Panel/Lines" unique_id=956522979]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Map mode: Terrain"
+bbcode_enabled = true
+text = "Map Mode: Terrain"
+fit_content = true
+script = ExtResource("5")
 
 [node name="SelectionLabel" type="Label" parent="Hud/Panel/Lines" unique_id=1628245045]
 unique_name_in_owner = true

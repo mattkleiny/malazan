@@ -1,0 +1,6 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"region"
+title = "Region"
+body = "A group of [concept:area|areas], and one part of a [concept:continent]."

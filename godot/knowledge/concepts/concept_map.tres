@@ -1,0 +1,6 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"map"
+title = "Map"
+body = "The world the game is played on: its [concept:location|locations], the divisions above them, and the lie of its land."

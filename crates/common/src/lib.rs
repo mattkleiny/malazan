@@ -2,10 +2,6 @@
 
 use surreal::ecs::{TickEvent, World};
 
-mod clock;
-
-pub use clock::{FIXED_STEP, SimulationClock};
-
 /// Sent to the game every frame.
 #[derive(TickEvent, Clone)]
 pub struct VariableTick {
@@ -19,8 +15,6 @@ pub struct FixedTick {
 }
 
 /// Installs the common systems into the given [World].
-pub fn install_common_systems(world: &mut World) {
-  world.add_global(SimulationClock::default());
-}
+pub fn install_common_systems(_world: &mut World) {}
 
 surreal::ecs::install_systems!("common", order: 100, install: install_common_systems);

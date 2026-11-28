@@ -3,6 +3,7 @@
 use godot::prelude::*;
 
 extern crate game_common;
+extern crate game_knowledge;
 extern crate game_map;
 extern crate game_terrain;
 

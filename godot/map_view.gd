@@ -8,7 +8,7 @@ var _hovered: int = -1
 @onready var _terrain: TerrainView = %TerrainView
 @onready var _camera: MapCamera = %MapCamera
 @onready var _selection_label: Label = %SelectionLabel
-@onready var _mode_label: Label = %ModeLabel
+@onready var _mode_label: KnowledgeLabel = %ModeLabel
 @onready var _mode_bar: MapModeBar = %MapModeBar
 
 
@@ -62,7 +62,7 @@ func _describe() -> void:
 func _show_mode(mode: StringName) -> void:
 	_terrain.set_map_mode(mode)
 	_mode_bar.show_chosen(mode)
-	_mode_label.text = "Map mode: %s" % _terrain.get_map_mode_label(mode)
+	_mode_label.markup = "[concept:map_mode]: %s" % _terrain.get_map_mode_label(mode)
 	_describe()
 
 

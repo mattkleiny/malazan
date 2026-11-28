@@ -1,0 +1,8 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"terrain"
+title = "Terrain"
+body = "The kind of ground or water a [concept:location] is made of, such as plains, mountains or sea.
+
+Ground lying below [concept:sea_level|sea level] is under water."

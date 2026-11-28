@@ -36,3 +36,12 @@ This is the project's ubiquitous language: one line per term, grouped by section
 - **Brush**: The circle of ground a map editor tool acts on, with a radius and a strength. _Avoid_: cursor, pen
 - **Stroke**: One press-drag-release of a brush; it is undone and redone as one. _Avoid_: drag, paint operation
 - **Sculpt**: Raising, lowering, smoothing or flattening the ground with a brush. _Avoid_: terraform, deform
+
+## Knowledge
+
+- **Knowledge Base**: Everything the game can explain about itself to the player, each piece reachable from any other that mentions it. _Avoid_: encyclopedia, wiki, help
+- **Concept**: One idea of the game the player can look up, with a name and a description. _Avoid_: entry, article, glossary term
+- **Knowledge Link**: A mention of a piece of knowledge inside text, naming its kind and which one; resting the cursor on it opens its tooltip. _Avoid_: hyperlink, reference, keyword
+- **Knowledge Markup**: Text written with knowledge links in it. _Avoid_: rich text, tagged text
+- **Tooltip**: The panel describing a piece of knowledge, opened beside the cursor from a knowledge link; a link inside one opens another on top of it. _Avoid_: popup, hint, hover card
+- **Lock**: A tooltip staying open after the cursor leaves its link, so the cursor can move onto it; it happens once the tooltip has been open a short while. _Avoid_: pin, freeze

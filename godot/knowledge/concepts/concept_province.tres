@@ -1,0 +1,8 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"province"
+title = "Province"
+body = "A group of neighbouring [concept:location|locations].
+
+Provinces are in turn grouped into an [concept:area]."

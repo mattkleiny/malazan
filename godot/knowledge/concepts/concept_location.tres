@@ -1,0 +1,8 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"location"
+title = "Location"
+body = "The smallest piece the [concept:map] is divided into. Every point of the map lies in exactly one location, and each is made of one [concept:terrain].
+
+Neighbouring locations are grouped into a [concept:province]."

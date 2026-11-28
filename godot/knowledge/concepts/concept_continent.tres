@@ -1,0 +1,6 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"continent"
+title = "Continent"
+body = "The largest division of the [concept:map]: a group of [concept:region|regions]."

@@ -1,0 +1,6 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"sea_level"
+title = "Sea Level"
+body = "The height at which the sea lies. Ground below it is under water, and where it meets the land a [concept:border] becomes a shore."

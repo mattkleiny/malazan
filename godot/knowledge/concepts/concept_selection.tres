@@ -1,0 +1,8 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"selection"
+title = "Selection"
+body = "The thing picking the [concept:map] chooses in the shown [concept:map_mode|map mode]: a [concept:location], or a whole [concept:province] or [concept:region].
+
+It is lit while the cursor rests on it or once it is chosen."

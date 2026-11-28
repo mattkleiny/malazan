@@ -1,0 +1,6 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"neighbour"
+title = "Neighbour"
+body = "A [concept:location] sharing a [concept:border] with another."

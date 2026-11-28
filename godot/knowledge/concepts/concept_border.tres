@@ -1,0 +1,6 @@
+[gd_resource type="KnowledgeConcept" format=3]
+
+[resource]
+id = &"border"
+title = "Border"
+body = "The line where two [concept:location|locations] meet. It is ranked by the highest division it separates, from [concept:province] up to [concept:continent]; a shore ranks highest of all."
