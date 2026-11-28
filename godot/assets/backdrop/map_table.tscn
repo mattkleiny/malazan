@@ -1,0 +1,52 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://assets/backdrop/map_table.gd" id="1"]
+[ext_resource type="Shader" path="res://assets/backdrop/table.gdshader" id="2"]
+[ext_resource type="PackedScene" path="res://assets/backdrop/knife.tscn" id="3"]
+
+[sub_resource type="ShaderMaterial" id="Material_boards"]
+shader = ExtResource("2")
+
+[sub_resource type="PlaneMesh" id="Mesh_surface"]
+size = Vector2(16000, 16000)
+
+[sub_resource type="Gradient" id="Gradient_shadow"]
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(0.05, 0.03, 0.02, 0.6, 0.05, 0.03, 0.02, 0.3, 0.05, 0.03, 0.02, 0)
+
+[sub_resource type="GradientTexture2D" id="Texture_shadow"]
+gradient = SubResource("Gradient_shadow")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Material_shadow"]
+transparency = 1
+shading_mode = 0
+albedo_texture = SubResource("Texture_shadow")
+
+[sub_resource type="PlaneMesh" id="Mesh_shadow"]
+material = SubResource("Material_shadow")
+size = Vector2(1, 1)
+
+[node name="MapTable" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Surface" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 768, -1, 1024)
+material_override = SubResource("Material_boards")
+cast_shadow = 0
+mesh = SubResource("Mesh_surface")
+
+[node name="Knife" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1321, 0, 1843)
+
+[node name="Shadow" type="MeshInstance3D" parent="Knife"]
+transform = Transform3D(229.81, 0, -54.637, 0, 1, 0, 192.84, 0, 65.114, 95, 0.4, 80)
+cast_shadow = 0
+mesh = SubResource("Mesh_shadow")
+
+[node name="Model" parent="Knife" instance=ExtResource("3")]
+transform = Transform3D(264.55, 72.469, 56.232, -52.093, 259.98, -89.975, -75.499, 74.549, 259.12, 0, -8, 0)

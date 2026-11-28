@@ -1,11 +1,11 @@
 //! Editing the map in place: painting locations, shaping the ground,
-//! changing the definitions, and saving it all back to its files.
+//! changing the definitions, and saving it all back to its map file, labels
+//! included.
 
-use game_map::{Brush, LocationField, Map, MapEdit, MapPosition, Sculpt, Stroke, Terrain, paint_location, sculpt};
-use godot::{
-  classes::{Camera3D, FileAccess, file_access::ModeFlags},
-  prelude::*,
+use game_map::{
+  Brush, LocationField, Map, MapContents, MapEdit, MapPosition, Sculpt, Stroke, Terrain, paint_location, sculpt,
 };
+use godot::{classes::Camera3D, prelude::*, tools::try_save};
 
 use crate::{
   picking::{Ray, pick, surface_height},
@@ -18,6 +18,13 @@ pub struct EditState {
   stroke: Option<Stroke>,
   edits: Vec<MapEdit>, // Every finished stroke, by its id, for undo and redo.
   is_dirty: bool,      // Whether anything has changed since the map was read or saved.
+}
+
+impl EditState {
+  /// Notes that the map has changed since it was read or saved.
+  pub fn mark_dirty(&mut self) {
+    self.is_dirty = true;
+  }
 }
 
 #[godot_api(secondary)]
@@ -278,33 +285,23 @@ impl TerrainView {
     self.editing.is_dirty
   }
 
-  /// Writes the map back to its files; why it failed, or empty when it was
-  /// saved.
+  /// Writes the map and its labels back to the map file; why it failed, or
+  /// empty when it was saved.
   #[func]
   fn save_map(&mut self) -> GString {
-    let Some(map) = &self.map else {
-      return GString::from("no map");
+    let (Some(map), Some(resource)) = (&self.map, &self.map_resource) else {
+      return GString::from("no map file");
     };
-    let files = match map.to_files() {
-      Ok(files) => files,
-      Err(error) => return GString::from(error.to_string().as_str()),
-    };
+    let mut resource = resource.clone();
 
-    let directory = self.map_directory.to_string();
-    let written = [
-      ("definitions.csv", files.definitions.into_bytes()),
-      ("locations.png", files.locations_png),
-      ("heightmap.png", files.heightmap_png),
-    ];
+    resource.bind_mut().contents = Some(MapContents {
+      map: map.clone(),
+      labels: self.labels.clone(),
+    });
 
-    for (name, bytes) in written {
-      let path = format!("{directory}/{name}");
-      let Some(mut file) = FileAccess::open(&path, ModeFlags::WRITE) else {
-        return GString::from(format!("cannot write {path}: {:?}", FileAccess::get_open_error()).as_str());
-      };
-
-      file.store_buffer(&PackedByteArray::from(bytes.as_slice()));
-      file.close();
+    let path = resource.get_path();
+    if let Err(error) = try_save(&resource, &path) {
+      return GString::from(format!("cannot write {path}: {error}").as_str());
     }
 
     self.editing.is_dirty = false;
@@ -313,8 +310,8 @@ impl TerrainView {
 }
 
 impl TerrainView {
-  /// Takes up a map with changed definitions: redraws its borders and fills,
-  /// and selects again.
+  /// Takes up a map with changed definitions: redraws its borders, ground and
+  /// fills, and selects again.
   fn replace_map(&mut self, map: Map) {
     if let Some(textures) = &mut self.textures {
       textures.refresh_borders(&map);
@@ -322,6 +319,7 @@ impl TerrainView {
 
     self.map = Some(map);
     self.editing.is_dirty = true;
+    self.upload_terrains();
     self.show_mode();
   }
 }

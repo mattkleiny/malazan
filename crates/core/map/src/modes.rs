@@ -69,7 +69,7 @@ inventory::collect!(MapModeRegistration);
 macro_rules! map_mode {
   (order: $order:expr, $mode:expr $(,)?) => {
     ::surreal::utilities::inventory::submit! {
-      $crate::MapModeRegistration {
+      $crate::modes::MapModeRegistration {
         order: $order,
         mode: &$mode,
       }

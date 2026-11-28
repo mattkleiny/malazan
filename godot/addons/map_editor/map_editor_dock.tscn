@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://addons/map_editor/map_editor_dock.gd" id="1"]
 [ext_resource type="Script" path="res://addons/map_editor/map_brush_panel.gd" id="2"]
 [ext_resource type="Script" path="res://addons/map_editor/map_location_list.gd" id="3"]
 [ext_resource type="Script" path="res://addons/map_editor/map_location_inspector.gd" id="4"]
+[ext_resource type="Script" path="res://addons/map_editor/map_label_inspector.gd" id="5"]
 
 [node name="Map" type="VBoxContainer"]
 custom_minimum_size = Vector2(260, 0)
@@ -53,6 +54,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "Level the ground to the height where the stroke began."
 text = "Flatten"
+
+[node name="Label" type="Button" parent="BrushPanel/Tools"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Choose a map label and drag it to move it. Shift-click the map to letter a new label there."
+text = "Label"
 
 [node name="RadiusRow" type="HBoxContainer" parent="BrushPanel"]
 layout_mode = 2
@@ -185,6 +192,76 @@ text = "Terrain"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="LabelInspector" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("5")
+
+[node name="LabelHint" type="Label" parent="LabelInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Click a label to choose it. Shift-click the map to letter a new one."
+autowrap_mode = 3
+
+[node name="LabelFields" type="GridContainer" parent="LabelInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+
+[node name="TextLabel" type="Label" parent="LabelInspector/LabelFields"]
+layout_mode = 2
+text = "Text"
+
+[node name="LabelText" type="LineEdit" parent="LabelInspector/LabelFields"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "The Rimeshelf"
+
+[node name="SizeLabel" type="Label" parent="LabelInspector/LabelFields"]
+layout_mode = 2
+text = "Size"
+
+[node name="LabelSize" type="SpinBox" parent="LabelInspector/LabelFields"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Height of the lettering (map units)."
+min_value = 1.0
+max_value = 500.0
+step = 0.1
+value = 34.0
+
+[node name="AngleLabel" type="Label" parent="LabelInspector/LabelFields"]
+layout_mode = 2
+text = "Angle"
+
+[node name="LabelAngle" type="SpinBox" parent="LabelInspector/LabelFields"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "How far the lettering is turned anticlockwise from reading west to east (degrees)."
+min_value = -180.0
+max_value = 180.0
+step = 0.5
+suffix = "°"
+
+[node name="WaterLabel" type="Label" parent="LabelInspector/LabelFields"]
+layout_mode = 2
+text = "Water"
+
+[node name="LabelIsWater" type="CheckBox" parent="LabelInspector/LabelFields"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Ink the label as the name of a sea or a lake."
+
+[node name="RemoveLabelButton" type="Button" parent="LabelInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Take the chosen label off the map. Delete does the same in the viewport."
+text = "Remove label"
 
 [node name="SaveSeparator" type="HSeparator" parent="."]
 layout_mode = 2

@@ -6,7 +6,7 @@ class_name MapBrushPanel extends VBoxContainer
 
 signal tool_changed(tool: StringName) ## Another tool was taken up.
 
-var current_tool: StringName = &"select" ## The tool in hand: select, paint, raise, lower, smooth or flatten.
+var current_tool: StringName = &"select" ## The tool in hand: select, paint, raise, lower, smooth, flatten or label.
 
 var _group: ButtonGroup = ButtonGroup.new()
 

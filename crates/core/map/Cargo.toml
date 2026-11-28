@@ -9,3 +9,5 @@ workspace = true
 [dependencies]
 surreal = { workspace = true }
 png = { workspace = true }
+zip = { workspace = true }
+godot = { workspace = true }

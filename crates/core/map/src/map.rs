@@ -10,6 +10,7 @@ use crate::{
   divisions::{Area, Continent, Province, Region},
   heights::Heightfield,
   images::decode_png,
+  labels::LabelError,
   locations::{Location, LocationId},
   raster::LocationRaster,
 };
@@ -41,6 +42,11 @@ pub enum MapError {
   LocationInUse { name: String },
   MissingLocations,
   UnwritableImage { image: &'static str },
+  UnreadableArchive,
+  MissingEntry { entry: &'static str },
+  UnreadableEntry { entry: &'static str },
+  UnwritableArchive,
+  MalformedLabels(LabelError),
 }
 
 impl fmt::Display for MapError {
@@ -72,11 +78,16 @@ impl fmt::Display for MapError {
       Self::LocationInUse { name } => write!(f, "'{name}' is still painted on the map"),
       Self::MissingLocations => write!(f, "the map is painted with locations the definitions do not name"),
       Self::UnwritableImage { image } => write!(f, "the {image} image could not be written"),
+      Self::UnreadableArchive => write!(f, "the map file is not a zip archive"),
+      Self::MissingEntry { entry } => write!(f, "the map file holds no {entry}"),
+      Self::UnreadableEntry { entry } => write!(f, "the map file's {entry} could not be read"),
+      Self::UnwritableArchive => write!(f, "the map file could not be written"),
+      Self::MalformedLabels(error) => write!(f, "{error}"),
     }
   }
 }
 
-/// The files a map is read from.
+/// The files a map is read from, as its map file holds them.
 pub struct MapSources<'a> {
   pub definitions: &'a str,    // The definitions table.
   pub locations_png: &'a [u8], // The image painted in key colours.

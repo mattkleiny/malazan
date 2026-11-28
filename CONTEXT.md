@@ -21,8 +21,11 @@ This is the project's ubiquitous language: one line per term, grouped by section
 - **Sea Level**: The height at which the sea lies; ground below it is under water.
 - **Neighbour**: A location sharing a border with another. _Avoid_: adjacent tile
 - **Border**: The line where two locations meet, ranked by the highest tier it divides; a shore ranks highest. _Avoid_: edge, outline
+- **Glyph**: A small pen drawing the map marks a kind of terrain with, such as a peak for mountains or a tree for forest. _Avoid_: icon, symbol, decal, sprite
+- **Map Label**: A name lettered across the map where the designer placed it, at a chosen size and angle, inked as land or water; placed and edited by hand in the map editor, never worked out from the map. _Avoid_: caption, nameplate, text
+- **Table**: The surface the map lies on, seen around the map's edges, with a knife stuck through one corner. _Avoid_: backdrop, background, desk
 - **Map Mode**: One way of colouring the map's locations, such as by terrain or by province, which also decides what picking the map selects; one is chosen at a time. _Avoid_: overlay, view, filter
-- **Fill**: The colour a map mode gives a location, and how strongly it covers the ground. _Avoid_: tint, overlay colour
+- **Fill**: The colour a map mode gives a location, laid over the map's paper as a wash, and how strongly it covers the ground. _Avoid_: tint, overlay colour
 - **Map Mode Preview**: A map mode shown over the chosen one for a while, such as while the cursor rests on a button. _Avoid_: temporary mode, hover mode
 - **Map Mode Fade**: The short blend from one map mode's fills to the next. _Avoid_: transition, tween
 - **Map Mode Bar**: The row of map mode icons along the bottom of the screen; resting on one previews its mode, pressing it chooses it. _Avoid_: toolbar, mode picker
@@ -33,6 +36,7 @@ This is the project's ubiquitous language: one line per term, grouped by section
 
 - **Map Editor**: The editor tool for changing the map in place: painting locations, shaping the ground and editing the definitions. _Avoid_: level editor, map tool
 - **Definitions**: The table naming every location, the divisions it sits in, its terrain and its key colour. _Avoid_: province table, map data
+- **Map File**: The one file a map is kept in, packing its definitions, location image, heightmap and map labels together; the map editor reads and saves it whole. _Avoid_: map folder, map data, level file
 - **Brush**: The circle of ground a map editor tool acts on, with a radius and a strength. _Avoid_: cursor, pen
 - **Stroke**: One press-drag-release of a brush; it is undone and redone as one. _Avoid_: drag, paint operation
 - **Sculpt**: Raising, lowering, smoothing or flattening the ground with a brush. _Avoid_: terraform, deform

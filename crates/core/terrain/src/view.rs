@@ -1,19 +1,20 @@
 //! The terrain view: the node that draws the map and picks locations on it.
 
 mod editing;
+mod labels;
 mod selections;
 mod textures;
 
-use game_map::{LocationId, Map, MapMode, MapSources, SEA_LEVEL, map_mode, map_modes};
+use game_map::{LocationId, Map, MapContents, MapMode, MapResource, map_mode, map_modes};
 use godot::{
   classes::{
-    ArrayMesh, Camera3D, FileAccess, INode3D, ImageTexture, MeshInstance3D, Node3D, ShaderMaterial,
+    ArrayMesh, Camera3D, INode3D, ImageTexture, MeshInstance3D, Node3D, ShaderMaterial,
     geometry_instance_3d::ShadowCastingSetting,
     mesh::{ArrayType, PrimitiveType},
   },
   prelude::*,
 };
-pub use selections::MapSelection;
+use selections::MapSelection;
 use surreal::{cvar, maths::Vec3};
 
 use crate::{
@@ -21,7 +22,7 @@ use crate::{
   picking::{Ray, pick},
   selections::Selections,
   transitions::FillTransition,
-  view::textures::{MapTextures, colors_image, highlights_image},
+  view::textures::{MapTextures, colors_image, highlights_image, terrains_image},
 };
 
 cvar!(pub MAP_MODE_FADE: f64, "terrain/map_mode_fade", 0.3, "How long the map takes to fade between map modes (s).");
@@ -44,10 +45,9 @@ struct Chunk {
 pub struct TerrainView {
   base: Base<Node3D>,
 
-  /// Folder holding definitions.csv, locations.png and heightmap.png.
+  /// The map file (.map) to draw.
   #[export]
-  #[init(val = GString::from("res://map"))]
-  map_directory: GString,
+  map_resource: Option<Gd<MapResource>>,
 
   /// Height of the tallest peak above the sea (map units).
   #[export(range = (0.0, 500.0))]
@@ -77,16 +77,18 @@ pub struct TerrainView {
   textures: Option<MapTextures>,
   view_camera: Option<Gd<Camera3D>>, // Looks at the map in place of the viewport's camera, as the editor's does.
   editing: editing::EditState,
+  labels: Vec<game_map::MapLabel>,
 }
 
 #[godot_api]
 impl INode3D for TerrainView {
   fn ready(&mut self) {
-    let Some(map) = self.load_map() else {
+    let Some(contents) = self.load_contents() else {
       return;
     };
 
-    self.build(map);
+    self.build(contents.map);
+    self.show_labels(contents.labels);
   }
 
   fn process(&mut self, delta: f64) {
@@ -97,6 +99,10 @@ impl INode3D for TerrainView {
 
 #[godot_api]
 impl TerrainView {
+  /// The map's labels were read, or one was changed, added or taken away.
+  #[signal]
+  fn labels_changed();
+
   /// The location under a point of the screen, or -1 for none.
   #[func]
   fn pick_location(&self, camera: Gd<Camera3D>, screen_position: Vector2) -> i64 {
@@ -236,22 +242,19 @@ impl TerrainView {
 }
 
 impl TerrainView {
-  fn load_map(&self) -> Option<Map> {
-    let directory = self.map_directory.to_string();
-    let read = |file: &str| FileAccess::get_file_as_bytes(&format!("{directory}/{file}"));
-    let definitions = FileAccess::get_file_as_string(&format!("{directory}/definitions.csv")).to_string();
-    let (locations, heights) = (read("locations.png"), read("heightmap.png"));
-
-    let sources = MapSources {
-      definitions: &definitions,
-      locations_png: locations.as_slice(),
-      heightmap_png: heights.as_slice(),
-      sea_level: SEA_LEVEL.get(),
+  /// A copy of what the map file holds, for the view to draw and edit.
+  fn load_contents(&self) -> Option<MapContents> {
+    let Some(resource) = &self.map_resource else {
+      godot_warn!("TerrainView: no map file to draw");
+      return None;
     };
+    let contents = resource.bind().contents.clone();
 
-    Map::from_sources(&sources)
-      .inspect_err(|error| godot_error!("TerrainView: cannot read the map in {directory}: {error}"))
-      .ok()
+    if contents.is_none() {
+      godot_error!("TerrainView: the map file {} holds no map", resource.get_path());
+    }
+
+    contents
   }
 
   /// Sets up the material and the chunks for a newly loaded map.
@@ -303,6 +306,7 @@ impl TerrainView {
     self.grid = Some(grid);
     self.textures = Some(textures);
     self.map = Some(map);
+    self.upload_terrains();
     self.chosen_mode = map_modes().first().copied();
     self.show_mode();
   }
@@ -428,6 +432,20 @@ impl TerrainView {
 
     self.set_parameter("colors_tex", &colors.to_variant());
     self.colors = Some(colors);
+  }
+
+  /// Tells the shader what kind of ground each location is.
+  fn upload_terrains(&mut self) {
+    let Some(map) = &self.map else {
+      return;
+    };
+    let Some(terrains) = terrains_image(&map.locations).and_then(|image| ImageTexture::create_from_image(&image))
+    else {
+      godot_error!("TerrainView: cannot make the terrain lookup");
+      return;
+    };
+
+    self.set_parameter("terrains_tex", &terrains.to_variant());
   }
 
   fn upload_highlights(&mut self) {

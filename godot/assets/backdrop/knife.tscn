@@ -1,0 +1,73 @@
+[gd_scene load_steps=9 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Material_steel"]
+albedo_color = Color(0.66, 0.66, 0.63, 1)
+metallic = 0.35
+metallic_specular = 0.8
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="Material_brass"]
+albedo_color = Color(0.52, 0.38, 0.16, 1)
+metallic = 0.3
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_leather"]
+albedo_color = Color(0.16, 0.09, 0.06, 1)
+roughness = 0.85
+
+[sub_resource type="CylinderMesh" id="Mesh_blade"]
+material = SubResource("Material_steel")
+top_radius = 0.08
+bottom_radius = 0.05
+height = 0.5
+radial_segments = 4
+rings = 1
+
+[sub_resource type="BoxMesh" id="Mesh_guard"]
+material = SubResource("Material_brass")
+size = Vector3(0.3, 0.035, 0.05)
+
+[sub_resource type="CylinderMesh" id="Mesh_grip"]
+material = SubResource("Material_leather")
+top_radius = 0.03
+bottom_radius = 0.026
+height = 0.3
+radial_segments = 12
+rings = 1
+
+[sub_resource type="SphereMesh" id="Mesh_pommel"]
+material = SubResource("Material_brass")
+radius = 0.045
+height = 0.08
+radial_segments = 16
+rings = 8
+
+[sub_resource type="CylinderMesh" id="Mesh_band"]
+material = SubResource("Material_brass")
+top_radius = 0.033
+bottom_radius = 0.033
+height = 0.02
+radial_segments = 12
+rings = 1
+
+[node name="Knife" type="Node3D"]
+
+[node name="Blade" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.13, 0, 0.25, 0)
+mesh = SubResource("Mesh_blade")
+
+[node name="Guard" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.515, 0)
+mesh = SubResource("Mesh_guard")
+
+[node name="Grip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0)
+mesh = SubResource("Mesh_grip")
+
+[node name="Band" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.83, 0)
+mesh = SubResource("Mesh_band")
+
+[node name="Pommel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.87, 0)
+mesh = SubResource("Mesh_pommel")

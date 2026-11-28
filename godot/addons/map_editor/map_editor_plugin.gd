@@ -1,21 +1,27 @@
-## Edits the map a TerrainView draws: paints locations and shapes the ground in the 3D viewport, and edits the definitions from a dock.
+## Edits the map a TerrainView draws: paints locations, shapes the ground and places map labels in the 3D viewport, and edits the definitions from a dock.
 
 @tool
 extends EditorPlugin
 
 const DOCK_SCENE: PackedScene = preload("res://addons/map_editor/map_editor_dock.tscn")
-const MAP_FILES: Array[String] = ["definitions.csv", "locations.png", "heightmap.png"] ## The files a map is saved to, in its folder.
+const DOCK_ICON: Texture2D = preload("res://editor/icons/MapEditorDock.svg")
 const DAB_SPACING: float = 0.3 ## Gap between dabs along a stroke, as a share of the brush's radius.
 const OUTLINE_POINTS: int = 48
 const OUTLINE_COLOR: Color = Color(1.0, 0.85, 0.4, 0.9)
+const NEW_LABEL_SIZE: float = 20.0 ## Height a newly lettered label starts at (map units).
 
 var _terrain: TerrainView
+var _labels: MapLabels
+var _editor_dock: EditorDock ## The editor's dock the map editor's panel sits in.
 var _dock: MapEditorDock
 var _camera: Camera3D
 var _brush_point: Vector3 = Vector3(NAN, NAN, NAN) ## Where the brush rests on the map, in the terrain's own space.
 var _last_dab: Vector3 = Vector3(NAN, NAN, NAN)
 var _flatten_level: float = 0.0
 var _is_stroking: bool = false
+var _label: int = -1 ## The chosen map label, or -1 for none.
+var _label_before_drag: MapLabel ## The chosen label as it was when a drag began, or null while none is dragged.
+var _drag_offset: Vector2 = Vector2.ZERO ## From the point grabbed to the label's middle (map units).
 
 
 func _enter_tree() -> void:
@@ -25,13 +31,24 @@ func _enter_tree() -> void:
 	_dock.add_requested.connect(_on_dock_add_requested)
 	_dock.field_edited.connect(_on_dock_field_edited)
 	_dock.save_requested.connect(_on_dock_save_requested)
-	add_control_to_dock(DOCK_SLOT_RIGHT_UL, _dock)
-	_dock.hide()
+	_dock.label_edited.connect(_on_dock_label_edited)
+	_dock.label_remove_requested.connect(_on_dock_label_remove_requested)
+
+	_editor_dock = EditorDock.new()
+	_editor_dock.title = "Map"
+	_editor_dock.layout_key = "map_editor"
+	_editor_dock.dock_icon = DOCK_ICON
+	_editor_dock.default_slot = EditorDock.DOCK_SLOT_RIGHT_UL
+	_editor_dock.available_layouts = EditorDock.DOCK_LAYOUT_VERTICAL | EditorDock.DOCK_LAYOUT_FLOATING
+	_editor_dock.transient = true # Opened and closed with a TerrainView's selection, not by the saved layout.
+	_editor_dock.add_child(_dock)
+	add_dock(_editor_dock)
+	_editor_dock.close()
 
 
 func _exit_tree() -> void:
-	remove_control_from_docks(_dock)
-	_dock.queue_free()
+	remove_dock(_editor_dock)
+	_editor_dock.queue_free()
 
 
 func _handles(object: Object) -> bool:
@@ -43,13 +60,18 @@ func _edit(object: Object) -> void:
 	if _terrain == null:
 		return
 
+	_labels = _find_labels(_terrain)
+	_label_before_drag = null
+	_choose_label(-1)
 	_dock.show_locations(_terrain.get_location_names(), _terrain.get_terrains())
 	_show_tool(_dock.get_tool())
 
 
 func _make_visible(visible: bool) -> void:
-	_dock.visible = visible
-	if not visible:
+	if visible:
+		_editor_dock.make_visible()
+	else:
+		_editor_dock.close()
 		_brush_point = Vector3(NAN, NAN, NAN)
 		update_overlays()
 
@@ -60,6 +82,9 @@ func _forward_3d_gui_input(camera: Camera3D, event: InputEvent) -> int:
 
 	_camera = camera
 	_terrain.set_view_camera(camera)
+
+	if _dock.get_tool() == &"label":
+		return _label_input(event)
 
 	var motion := event as InputEventMouseMotion
 	if motion != null:
@@ -80,6 +105,10 @@ func _forward_3d_gui_input(camera: Camera3D, event: InputEvent) -> int:
 
 
 func _forward_3d_draw_over_viewport(overlay: Control) -> void:
+	if _dock.get_tool() == &"label":
+		_draw_chosen_label(overlay)
+		return
+
 	if not is_instance_valid(_camera) or not _brush_point.is_finite() or _dock.get_tool() == &"select":
 		return
 
@@ -129,6 +158,144 @@ func _press(button: InputEventMouseButton) -> int:
 	_last_dab = Vector3(NAN, NAN, NAN)
 	_dab_towards(point)
 	return AFTER_GUI_INPUT_STOP
+
+
+## What the label tool does with an input: choosing, dragging, lettering and removing labels.
+func _label_input(event: InputEvent) -> int:
+	var key := event as InputEventKey
+	if key != null and key.pressed and not key.echo and key.keycode == KEY_DELETE and _label >= 0:
+		_remove_chosen_label()
+		return AFTER_GUI_INPUT_STOP
+
+	var motion := event as InputEventMouseMotion
+	if motion != null:
+		if _label_before_drag == null:
+			return AFTER_GUI_INPUT_PASS
+		_drag_label(motion.position)
+		return AFTER_GUI_INPUT_STOP
+
+	var button := event as InputEventMouseButton
+	if button == null or button.button_index != MOUSE_BUTTON_LEFT:
+		return AFTER_GUI_INPUT_PASS
+
+	if not button.pressed:
+		if _label_before_drag == null:
+			return AFTER_GUI_INPUT_PASS
+		_finish_drag()
+		return AFTER_GUI_INPUT_STOP
+
+	var grabbed := _labels.label_at(_camera, button.position) if is_instance_valid(_labels) else -1
+	var point := _terrain.pick_point(_camera, button.position)
+	if grabbed < 0 and button.shift_pressed and point.is_finite():
+		_letter_label_at(Vector2(point.x, point.z))
+		return AFTER_GUI_INPUT_STOP
+
+	_choose_label(grabbed)
+	if grabbed < 0:
+		return AFTER_GUI_INPUT_PASS
+
+	_label_before_drag = _terrain.get_map_label(grabbed)
+	_drag_offset = _label_before_drag.position - Vector2(point.x, point.z) if point.is_finite() else Vector2.ZERO
+	return AFTER_GUI_INPUT_STOP
+
+
+func _drag_label(screen_position: Vector2) -> void:
+	var point := _terrain.pick_point(_camera, screen_position)
+	if not point.is_finite():
+		return
+
+	var moved := _terrain.get_map_label(_label)
+	moved.position = Vector2(point.x, point.z) + _drag_offset
+	_terrain.set_map_label(_label, moved)
+	update_overlays()
+
+
+func _finish_drag() -> void:
+	var before := _label_before_drag
+	_label_before_drag = null
+	var after := _terrain.get_map_label(_label)
+	if after == null or after.position == before.position:
+		return
+
+	var undo_redo := get_undo_redo()
+	undo_redo.create_action("Move label")
+	undo_redo.add_do_method(_terrain, &"set_map_label", _label, after)
+	undo_redo.add_do_method(self, &"_choose_label", _label)
+	undo_redo.add_undo_method(_terrain, &"set_map_label", _label, before)
+	undo_redo.add_undo_method(self, &"_choose_label", _label)
+	undo_redo.commit_action(false)
+	_dock.show_status("Unsaved changes")
+
+
+## Letters a new label with its middle at a point of the map, and chooses it.
+func _letter_label_at(position: Vector2) -> void:
+	var label := MapLabel.new()
+	label.text = "New label"
+	label.position = position
+	label.size = NEW_LABEL_SIZE
+
+	var index := _terrain.get_map_labels().size()
+	var error := _terrain.insert_map_label(index, label)
+	if not error.is_empty():
+		_dock.show_status(error)
+		return
+
+	var undo_redo := get_undo_redo()
+	undo_redo.create_action("Letter label")
+	undo_redo.add_do_method(_terrain, &"insert_map_label", index, label)
+	undo_redo.add_do_method(self, &"_choose_label", index)
+	undo_redo.add_undo_method(_terrain, &"remove_map_label", index)
+	undo_redo.add_undo_method(self, &"_choose_label", -1)
+	undo_redo.commit_action(false)
+	_choose_label(index)
+	_dock.show_status("Unsaved changes")
+
+
+func _remove_chosen_label() -> void:
+	var index := _label
+	var before := _terrain.get_map_label(index)
+	if before == null:
+		return
+
+	_terrain.remove_map_label(index)
+
+	var undo_redo := get_undo_redo()
+	undo_redo.create_action("Remove label")
+	undo_redo.add_do_method(_terrain, &"remove_map_label", index)
+	undo_redo.add_do_method(self, &"_choose_label", -1)
+	undo_redo.add_undo_method(_terrain, &"insert_map_label", index, before)
+	undo_redo.add_undo_method(self, &"_choose_label", index)
+	undo_redo.commit_action(false)
+	_choose_label(-1)
+	_dock.show_status("Unsaved changes")
+
+
+## Chooses a map label, or none for -1, and shows it in the dock.
+func _choose_label(index: int) -> void:
+	_label = index if is_instance_valid(_terrain) and _terrain.get_map_label(index) != null else -1
+	_dock.show_label(_terrain.get_map_label(_label) if _label >= 0 else null)
+	update_overlays()
+
+
+func _draw_chosen_label(overlay: Control) -> void:
+	if _label < 0 or not is_instance_valid(_camera) or not is_instance_valid(_labels):
+		return
+
+	var outline := _labels.get_screen_outline(_camera, _label)
+	if outline.is_empty():
+		return
+
+	outline.append(outline[0])
+	overlay.draw_polyline(outline, OUTLINE_COLOR, 2.0, true)
+
+
+## The node lettering a terrain's labels, or null when it has none.
+func _find_labels(terrain: TerrainView) -> MapLabels:
+	for child: Node in terrain.get_children():
+		if child is MapLabels:
+			return child
+	push_warning("Map Editor: the TerrainView has no MapLabels child, so its labels cannot be chosen")
+	return null
 
 
 func _move_brush(screen_position: Vector2) -> void:
@@ -210,9 +377,7 @@ func _save_map() -> void:
 		push_error("Map Editor: " + error)
 		return
 
-	var filesystem := EditorInterface.get_resource_filesystem()
-	for file: String in MAP_FILES:
-		filesystem.update_file(_terrain.map_directory.path_join(file))
+	EditorInterface.get_resource_filesystem().update_file(_terrain.map_resource.resource_path)
 	_dock.show_status("Saved")
 
 
@@ -281,3 +446,34 @@ func _on_dock_field_edited(location: int, field: StringName, value: String) -> v
 func _on_dock_save_requested() -> void:
 	if is_instance_valid(_terrain):
 		_save_map()
+
+
+func _on_dock_label_edited(label: MapLabel) -> void:
+	if not is_instance_valid(_terrain):
+		return
+
+	var index := _label
+	var before := _terrain.get_map_label(index)
+	if before == null:
+		return
+
+	var error := _terrain.set_map_label(index, label)
+	if not error.is_empty():
+		_dock.show_status(error)
+		_choose_label(index)
+		return
+
+	var undo_redo := get_undo_redo()
+	undo_redo.create_action("Edit label")
+	undo_redo.add_do_method(_terrain, &"set_map_label", index, label)
+	undo_redo.add_do_method(self, &"_choose_label", index)
+	undo_redo.add_undo_method(_terrain, &"set_map_label", index, before)
+	undo_redo.add_undo_method(self, &"_choose_label", index)
+	undo_redo.commit_action(false)
+	_choose_label(index)
+	_dock.show_status("Unsaved changes")
+
+
+func _on_dock_label_remove_requested() -> void:
+	if is_instance_valid(_terrain) and _label >= 0:
+		_remove_chosen_label()

@@ -1,6 +1,0 @@
-[gd_resource type="KnowledgeConcept" format=3]
-
-[resource]
-id = &"area"
-title = "Area"
-body = "A group of [concept:province|provinces], and one part of a [concept:region]."

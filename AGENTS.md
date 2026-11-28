@@ -28,6 +28,8 @@ Icons for surreal's classes live in surreal, in each crate's `icons/` folder, an
 
 A new crate needs a `path` dependency **and** an `extern crate` line in `crates/game/src/lib.rs`, or it is never linked: its `GodotClass` types silently vanish from the extension and its system installer never runs. A new core crate goes in `crates/core/<domain>`, named `game-<domain>`; the workspace picks it up through the `crates/core/*` glob.
 
+A crate's `pub` exports are the minimal set its dependent crates actually use, including what their tests use, and nothing more. A crate nobody depends on exports nothing at all: Godot reaches its classes through the extension, and `crates/game` only links it with `extern crate`. Keep modules private and re-export the items you need at the crate root rather than making modules `pub`. When a dependent stops using an item, take it out of the exports; when one needs a new item, export just that item.
+
 ## Working in this repo
 
 `vendor/surreal` is a git submodule pointing at the private `mattkleiny/surreal-gdext`. Nothing compiles without it and `git submodule update --init` cannot authenticate on its own in a cloud session, so **both repositories have to be attached to the session** and the submodule's pinned commit placed at `vendor/surreal` before any Rust work starts. An empty `vendor/surreal` is the first thing to check when `cargo check` cannot find the `surreal` crate.

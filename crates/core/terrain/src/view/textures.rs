@@ -1,6 +1,6 @@
 //! The textures the terrain shader reads the map from.
 
-use game_map::{CellRect, Fill, Map};
+use game_map::{CellRect, Fill, Location, Map};
 use godot::{
   classes::{Image, ImageTexture, image::Format},
   prelude::*,
@@ -156,6 +156,20 @@ pub fn colors_image(fills: &[Fill]) -> Option<Gd<Image>> {
     .collect();
 
   Image::create_from_data(LOOKUP_WIDTH as i32, rows as i32, false, Format::RGBA8, &data)
+}
+
+/// The terrain of each location, laid out like the colour lookup, so the
+/// shader can draw each kind of ground in its own way.
+pub fn terrains_image(locations: &[Location]) -> Option<Gd<Image>> {
+  let rows = locations.len().div_ceil(LOOKUP_WIDTH).max(1);
+  let data: PackedByteArray = locations
+    .iter()
+    .map(|location| location.terrain as u8)
+    .chain(std::iter::repeat(0))
+    .take(rows * LOOKUP_WIDTH)
+    .collect();
+
+  Image::create_from_data(LOOKUP_WIDTH as i32, rows as i32, false, Format::R8, &data)
 }
 
 /// Which locations are lit as hovered (red) and selected (green), laid out

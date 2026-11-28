@@ -34,7 +34,10 @@ pub enum Tier {
 }
 
 impl Tier {
-  fn key(self) -> &'static str {
+  pub const ALL: [Tier; 4] = [Tier::Province, Tier::Area, Tier::Region, Tier::Continent];
+
+  /// The name the tier is chosen by.
+  pub fn key(self) -> &'static str {
     match self {
       Tier::Province => "province",
       Tier::Area => "area",
