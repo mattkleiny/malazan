@@ -45,10 +45,13 @@ offset_bottom = 90.0
 layout_mode = 2
 
 [node name="ModeLabel" type="KnowledgeLabel" parent="Hud/Panel/Lines" unique_id=956522979]
+markup = "[concept:map_mode]: Terrain"
 unique_name_in_owner = true
 layout_mode = 2
+bbcode_enabled = true
+text = "[url=concept:map_mode][color=#f2d98c]Map Mode[/color][/url]: Terrain"
 fit_content = true
-markup = "[concept:map_mode]: Terrain"
+meta_underlined = false
 
 [node name="SelectionLabel" type="Label" parent="Hud/Panel/Lines" unique_id=1628245045]
 unique_name_in_owner = true

@@ -4,32 +4,22 @@
 @icon("res://editor/icons/KnowledgeBodyProperty.svg")
 class_name KnowledgeBodyProperty extends EditorProperty
 
-signal markup_edited(markup: String) ## The description changed, by typing or by a link being added.
-
 const HINT: String = "Ctrl+K to link · type [concept: to complete · Ctrl+click a link to open it"
 
 var _edit: KnowledgeMarkupEdit
 var _preview: RichTextLabel
 var _picker: KnowledgeLinkPicker
-var _link_button: Button
 var _is_updating: bool = false
 
 
 func _init() -> void:
 	var lines := VBoxContainer.new()
 
-	var toolbar := HBoxContainer.new()
-	_link_button = Button.new()
-	_link_button.text = "Link"
-	_link_button.tooltip_text = "Link to a concept (Ctrl+K). Selected text becomes the link's wording."
-	toolbar.add_child(_link_button)
 	var hint := Label.new()
 	hint.text = HINT
 	hint.modulate.a = 0.6
 	hint.clip_text = true
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	toolbar.add_child(hint)
-	lines.add_child(toolbar)
+	lines.add_child(hint)
 
 	_edit = KnowledgeMarkupEdit.new()
 	lines.add_child(_edit)
@@ -49,8 +39,6 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	_link_button.icon = get_theme_icon(&"Link", &"EditorIcons")
-	_link_button.pressed.connect(_open_picker)
 	_edit.text_changed.connect(_on_edit_text_changed)
 	_edit.link_requested.connect(_open_picker)
 	_edit.concept_opened.connect(_on_edit_concept_opened)
@@ -75,7 +63,11 @@ func refresh_links() -> void:
 
 func _show_markup(markup: String) -> void:
 	_preview.text = KnowledgeBase.format(markup)
-	markup_edited.emit(markup)
+
+
+## Opens a concept in the inspector once the signal that asked for it has finished, since opening it frees this editor.
+func _open_concept(concept: KnowledgeConcept) -> void:
+	EditorInterface.edit_resource.call_deferred(concept)
 
 
 func _open_picker() -> void:
@@ -91,13 +83,13 @@ func _on_edit_text_changed() -> void:
 
 
 func _on_edit_concept_opened(concept: KnowledgeConcept) -> void:
-	EditorInterface.edit_resource(concept)
+	_open_concept(concept)
 
 
 func _on_preview_meta_clicked(meta: Variant) -> void:
 	var concept: KnowledgeConcept = KnowledgeBase.resolve(str(meta))
 	if concept != null:
-		EditorInterface.edit_resource(concept)
+		_open_concept(concept)
 
 
 func _on_picker_concept_chosen(concept: KnowledgeConcept, is_new: bool) -> void:

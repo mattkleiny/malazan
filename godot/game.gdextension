@@ -26,7 +26,6 @@ compatibility_minimum = 4.4
 KnowledgeBase = "res://editor/icons/KnowledgeBase.svg"
 KnowledgeBodyProperty = "res://editor/icons/KnowledgeBodyProperty.svg"
 KnowledgeConcept = "res://editor/icons/KnowledgeConcept.svg"
-KnowledgeConceptLinks = "res://editor/icons/KnowledgeConceptLinks.svg"
 KnowledgeLabel = "res://editor/icons/KnowledgeLabel.svg"
 KnowledgeLink = "res://editor/icons/KnowledgeLink.svg"
 KnowledgeLinkPicker = "res://editor/icons/KnowledgeLinkPicker.svg"

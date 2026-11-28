@@ -1,12 +1,9 @@
-## Gives a concept in the inspector a description editor that links as you type, and a panel of the links into and out of it.
+## Gives a concept in the inspector a description editor that links as you type.
 
 @tool
 class_name KnowledgeInspectorPlugin extends EditorInspectorPlugin
 
 const FILE_PREFIX: String = "concept_" ## Concept files are named this, then their id.
-
-var _links: KnowledgeConceptLinks
-var _body: KnowledgeBodyProperty
 
 
 func _can_handle(object: Object) -> bool:
@@ -15,27 +12,16 @@ func _can_handle(object: Object) -> bool:
 
 func _parse_begin(object: Object) -> void:
 	var concept := object as KnowledgeConcept
-	_links = KnowledgeConceptLinks.new()
-	_links.concept = concept
-	_body = null
-
 	if String(concept.id).is_empty() and not concept.resource_path.is_empty():
 		add_custom_control(_make_naming_button(concept))
 
 
-func _parse_property(object: Object, _type: Variant.Type, name: String, _hint: PropertyHint, _hint_text: String, _usage: int, _wide: bool) -> bool:
+func _parse_property(_object: Object, _type: Variant.Type, name: String, _hint: PropertyHint, _hint_text: String, _usage: int, _wide: bool) -> bool:
 	if name != "body":
 		return false
 
-	_body = KnowledgeBodyProperty.new()
-	_body.markup_edited.connect(_links.show_markup)
-	_links.concept_added.connect(_body.refresh_links.unbind(1))
-	add_property_editor(name, _body)
+	add_property_editor(name, KnowledgeBodyProperty.new())
 	return true
-
-
-func _parse_end(_object: Object) -> void:
-	add_custom_control(_links)
 
 
 ## A button naming a new concept after its file: concept_sea_level.tres gives the id sea_level and the title Sea Level.
