@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bkw173xxlhhwa"
-path="res://.godot/imported/KnowledgeInspectorPlugin.svg-83251644da3fef30052bec7ca729816f.ctex"
+uid="uid://csi2wxxxl4ne5"
+path="res://.godot/imported/KnowledgeTooltipStack.svg-fb5b15f3c253af9415939a894f749dbf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeInspectorPlugin.svg"
-dest_files=["res://.godot/imported/KnowledgeInspectorPlugin.svg-83251644da3fef30052bec7ca729816f.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeTooltipStack.svg"
+dest_files=["res://.godot/imported/KnowledgeTooltipStack.svg-fb5b15f3c253af9415939a894f749dbf.ctex"]
 
 [params]
 

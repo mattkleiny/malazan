@@ -2,17 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cjtfiokxe18l1"
-path="res://.godot/imported/KnowledgeConcept.svg-5cfc4a772660494472a38b60040e8589.ctex"
+uid="uid://bjjpdovihwjth"
+path="res://.godot/imported/KnowledgeLabel.svg-3bf9818edeb502e8c94a41774d6dde51.ctex"
 metadata={
-"has_editor_variant": true,
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeConcept.svg"
-dest_files=["res://.godot/imported/KnowledgeConcept.svg-5cfc4a772660494472a38b60040e8589.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeLabel.svg"
+dest_files=["res://.godot/imported/KnowledgeLabel.svg-3bf9818edeb502e8c94a41774d6dde51.ctex"]
 
 [params]
 
@@ -43,5 +42,5 @@ process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
 svg/scale=1.0
-editor/scale_with_editor_scale=true
-editor/convert_colors_with_editor_theme=true
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

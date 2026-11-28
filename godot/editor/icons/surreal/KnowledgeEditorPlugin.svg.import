@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://coadtyp6t26er"
-path="res://.godot/imported/KnowledgeMarkupHighlighter.svg-ba12a690c9e9ac168de3e8d44466dfa6.ctex"
+uid="uid://bkkmkxm2b8oi2"
+path="res://.godot/imported/KnowledgeEditorPlugin.svg-5f6837ea194420c7825928601a4835c9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeMarkupHighlighter.svg"
-dest_files=["res://.godot/imported/KnowledgeMarkupHighlighter.svg-ba12a690c9e9ac168de3e8d44466dfa6.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeEditorPlugin.svg"
+dest_files=["res://.godot/imported/KnowledgeEditorPlugin.svg-5f6837ea194420c7825928601a4835c9.ctex"]
 
 [params]
 

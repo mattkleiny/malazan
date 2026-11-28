@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bctphpdix608v"
-path="res://.godot/imported/KnowledgeLink.svg-856cb3eb8c9983e45e1f90cd8e0bd166.ctex"
+uid="uid://bbte0hb8b27w6"
+path="res://.godot/imported/KnowledgeConcept.svg-c76c2340ca1cc806478fcea53c135a0a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeLink.svg"
-dest_files=["res://.godot/imported/KnowledgeLink.svg-856cb3eb8c9983e45e1f90cd8e0bd166.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeConcept.svg"
+dest_files=["res://.godot/imported/KnowledgeConcept.svg-c76c2340ca1cc806478fcea53c135a0a.ctex"]
 
 [params]
 

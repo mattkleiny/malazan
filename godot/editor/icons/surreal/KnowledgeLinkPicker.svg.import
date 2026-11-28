@@ -2,17 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddw246bmiay1u"
-path="res://.godot/imported/KnowledgeBase.svg-0f3df3c8a2a33b1e47717b62dda34291.ctex"
+uid="uid://f6y8nqjqc88e"
+path="res://.godot/imported/KnowledgeLinkPicker.svg-24fab4d91ce27907cab130d8525f35b4.ctex"
 metadata={
-"has_editor_variant": true,
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeBase.svg"
-dest_files=["res://.godot/imported/KnowledgeBase.svg-0f3df3c8a2a33b1e47717b62dda34291.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeLinkPicker.svg"
+dest_files=["res://.godot/imported/KnowledgeLinkPicker.svg-24fab4d91ce27907cab130d8525f35b4.ctex"]
 
 [params]
 
@@ -43,5 +42,5 @@ process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
 svg/scale=1.0
-editor/scale_with_editor_scale=true
-editor/convert_colors_with_editor_theme=true
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

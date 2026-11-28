@@ -2,17 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b1bwdb68dkvas"
-path="res://.godot/imported/KnowledgeTooltipStack.svg-36ba46c9a75ea766f5b336ead098c6f6.ctex"
+uid="uid://d0b6o06uyoh5u"
+path="res://.godot/imported/KnowledgeInspectorPlugin.svg-418ef3ada047935d00c63b7afebb8949.ctex"
 metadata={
-"has_editor_variant": true,
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeTooltipStack.svg"
-dest_files=["res://.godot/imported/KnowledgeTooltipStack.svg-36ba46c9a75ea766f5b336ead098c6f6.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeInspectorPlugin.svg"
+dest_files=["res://.godot/imported/KnowledgeInspectorPlugin.svg-418ef3ada047935d00c63b7afebb8949.ctex"]
 
 [params]
 
@@ -43,5 +42,5 @@ process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
 svg/scale=1.0
-editor/scale_with_editor_scale=true
-editor/convert_colors_with_editor_theme=true
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

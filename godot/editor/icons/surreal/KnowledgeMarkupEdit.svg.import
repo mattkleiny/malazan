@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cnukfi5i5vekq"
-path="res://.godot/imported/KnowledgeEditorPlugin.svg-ea153c19342050a8b4ee1baea23e4a59.ctex"
+uid="uid://cgvlwgbnifucs"
+path="res://.godot/imported/KnowledgeMarkupEdit.svg-cce777a9b3535896ceeb97b61b426d4b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://editor/icons/KnowledgeEditorPlugin.svg"
-dest_files=["res://.godot/imported/KnowledgeEditorPlugin.svg-ea153c19342050a8b4ee1baea23e4a59.ctex"]
+source_file="res://editor/icons/surreal/KnowledgeMarkupEdit.svg"
+dest_files=["res://.godot/imported/KnowledgeMarkupEdit.svg-cce777a9b3535896ceeb97b61b426d4b.ctex"]
 
 [params]
 

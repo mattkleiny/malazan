@@ -31,7 +31,11 @@ fn main() -> io::Result<()> {
       ..Configuration::default()
     })
     .with_target_directory("../target")
-    .with_icons(Icons::new("editor/icons").with_icons_from_directory("../../godot/editor/icons")?);
+    .with_icons(
+      Icons::new("editor/icons")
+        .with_icons_from_directory("../../godot/editor/icons")?
+        .with_surreal_icons("../../godot/editor/icons", "surreal")?,
+    );
 
   for (system, path) in STEAM_LIBRARIES {
     for mode in [Mode::Debug, Mode::Release] {

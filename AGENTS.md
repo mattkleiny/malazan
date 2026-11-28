@@ -24,6 +24,8 @@ Godot (`godot/`) is the presentation layer: rendering, input, UI, and scenes. It
 
 The editor icon folder is `godot/editor/icons/` (`res://editor/icons/`). Every GDScript node or resource type gets an `@icon` SVG there, and so does every Rust `GodotClass`. Icons are always named after the class in PascalCase (`KnowledgeTooltip.svg` for `knowledge_tooltip.gd`), never after the script file, whatever language the class is written in. This overrides any style guide that says snake_case. `crates/game/build.rs` maps each SVG in the folder to the class named by its file name.
 
+Icons for surreal's classes live in surreal, in each crate's `icons/` folder, and are shared by every project on it. The build copies them into `godot/editor/icons/surreal/` and lists them in `godot/game.gdextension`; that subfolder is generated like the `.gdextension` file, so change an icon in `vendor/surreal`, never the copy, and commit the copies the build writes.
+
 A new crate needs a `path` dependency **and** an `extern crate` line in `crates/game/src/lib.rs`, or it is never linked: its `GodotClass` types silently vanish from the extension and its system installer never runs. A new core crate goes in `crates/core/<domain>`, named `game-<domain>`; the workspace picks it up through the `crates/core/*` glob.
 
 ## Working in this repo
