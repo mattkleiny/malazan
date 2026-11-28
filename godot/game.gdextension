@@ -24,8 +24,14 @@ compatibility_minimum = 4.4
 
 [icons]
 KnowledgeBase = "res://editor/icons/KnowledgeBase.svg"
+KnowledgeBodyProperty = "res://editor/icons/KnowledgeBodyProperty.svg"
 KnowledgeConcept = "res://editor/icons/KnowledgeConcept.svg"
+KnowledgeConceptLinks = "res://editor/icons/KnowledgeConceptLinks.svg"
 KnowledgeLabel = "res://editor/icons/KnowledgeLabel.svg"
+KnowledgeLink = "res://editor/icons/KnowledgeLink.svg"
+KnowledgeLinkPicker = "res://editor/icons/KnowledgeLinkPicker.svg"
+KnowledgeMarkupEdit = "res://editor/icons/KnowledgeMarkupEdit.svg"
+KnowledgeMarkupHighlighter = "res://editor/icons/KnowledgeMarkupHighlighter.svg"
 KnowledgeTooltip = "res://editor/icons/KnowledgeTooltip.svg"
 KnowledgeTooltipStack = "res://editor/icons/KnowledgeTooltipStack.svg"
 MapBrushPanel = "res://editor/icons/MapBrushPanel.svg"

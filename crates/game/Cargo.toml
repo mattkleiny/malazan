@@ -12,7 +12,6 @@ surreal-build = { workspace = true }
 [dependencies]
 surreal = { workspace = true }
 game-common = { path = "../common", default-features = false }
-game-knowledge = { path = "../core/knowledge" }
 game-map = { path = "../core/map" }
 game-terrain = { path = "../core/terrain" }
 godot = { workspace = true }

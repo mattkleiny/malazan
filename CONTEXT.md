@@ -45,3 +45,4 @@ This is the project's ubiquitous language: one line per term, grouped by section
 - **Knowledge Markup**: Text written with knowledge links in it. _Avoid_: rich text, tagged text
 - **Tooltip**: The panel describing a piece of knowledge, opened beside the cursor from a knowledge link; a link inside one opens another on top of it. _Avoid_: popup, hint, hover card
 - **Lock**: A tooltip staying open after the cursor leaves its link, so the cursor can move onto it; it happens once the tooltip has been open a short while. _Avoid_: pin, freeze
+- **Knowledge Editor**: The editor tool for writing concepts: linking them as you type, following links from one concept to the next, and making the concept a link names. _Avoid_: concept editor, wiki editor

@@ -26,7 +26,7 @@ features = ["experimental-threads", "experimental-godot-api"]
 [workspace.dependencies.surreal]
 path = "vendor/surreal/surreal"
 default-features = false
-features = ["ecs", "godot"]
+features = ["ecs", "godot", "knowledge"]
 
 [workspace.dependencies.surreal-build]
 path = "vendor/surreal/surreal-build"

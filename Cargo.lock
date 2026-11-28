@@ -427,7 +427,6 @@ name = "game"
 version = "0.1.0"
 dependencies = [
  "game-common",
- "game-knowledge",
  "game-map",
  "game-terrain",
  "godot",
@@ -442,14 +441,6 @@ version = "0.1.0"
 dependencies = [
  "godot",
  "log",
- "surreal",
-]
-
-[[package]]
-name = "game-knowledge"
-version = "0.1.0"
-dependencies = [
- "godot",
  "surreal",
 ]
 
@@ -1872,6 +1863,7 @@ dependencies = [
  "surreal-editor",
  "surreal-godot",
  "surreal-gpu",
+ "surreal-knowledge",
  "surreal-steam",
 ]
 
@@ -1963,6 +1955,16 @@ dependencies = [
  "godot",
  "smallvec",
  "surreal-common",
+]
+
+[[package]]
+name = "surreal-knowledge"
+version = "0.1.0"
+dependencies = [
+ "godot",
+ "surreal-common",
+ "surreal-diagnostics",
+ "surreal-godot",
 ]
 
 [[package]]
