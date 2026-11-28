@@ -5,4 +5,4 @@ id = &"province"
 title = "Province"
 body = "A group of neighbouring [concept:location|locations].
 
-Provinces are in turn grouped into an [concept:area]."
+Provinces are in turn grouped into an [concept:area]. "
